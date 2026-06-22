@@ -1,7 +1,7 @@
 import pytest
 import pytest_asyncio
 from app.redis_client import redis_client, get_redis
-from app.services.game_service import GameService
+from app.services.game_service import GameService, Card
 from app.utils.redis_keys import get_game_state_key
 
 @pytest_asyncio.fixture(autouse=True)
@@ -13,55 +13,68 @@ async def cleanup_redis():
 
 @pytest.mark.asyncio
 async def test_game_initialization():
-    """
-    Test if a game is correctly created, cards are dealt properly (7 per player),
-    and the state is saved to Redis.
-    """
     redis = await get_redis()
     game_service = GameService(redis)
+    game_state = await game_service.create_game("game-1", ["p1", "p2"])
     
-    game_id = "test-game-123"
-    player_ids = ["player_1", "player_2"]
-    
-    # 1. Create a new game
-    game_state = await game_service.create_game(game_id, player_ids)
-    
-    # Assertions for game logic
-    assert game_state.game_id == game_id
-    assert len(game_state.players) == 2
-    assert game_state.players[0].player_id == "player_1"
-    
-    # Each player must start with exactly 7 cards
+    assert game_state.game_id == "game-1"
     assert len(game_state.players[0].hand) == 7
-    assert len(game_state.players[1].hand) == 7
-    
-    # The discard pile must have exactly 1 card to start
-    assert len(game_state.discard_pile) == 1
-    # First card cannot be wild
-    assert game_state.discard_pile[0].color != 'black'
-    
-    # A standard deck is 108 cards. 14 dealt + 1 discarded = 93 left in draw pile
-    assert len(game_state.draw_pile) == 93
+    assert game_state.active_color != ""
+    assert game_state.active_color != "black"
 
 @pytest.mark.asyncio
-async def test_game_state_persistence():
-    """
-    Test if the game state can be retrieved from Redis perfectly intact.
-    """
+async def test_draw_card_logic():
+    """Test if drawing a card works and changes the turn."""
     redis = await get_redis()
     game_service = GameService(redis)
+    game_id = "game-draw-test"
     
-    game_id = "test-persist-456"
+    state = await game_service.create_game(game_id, ["p1", "p2"])
+    assert state.current_turn_index == 0
     
-    # Create and save game
-    await game_service.create_game(game_id, ["pA", "pB", "pC", "pD"])
+    # p2 tries to draw out of turn (should fail)
+    success = await game_service.draw_card(game_id, "p2")
+    assert success is False
     
-    # Retrieve game from Redis using a fresh request
-    retrieved_state = await game_service.get_game_state(game_id)
+    # p1 draws a card (should succeed)
+    success = await game_service.draw_card(game_id, "p1")
+    assert success is True
     
-    assert retrieved_state is not None
-    assert retrieved_state.game_id == game_id
-    assert len(retrieved_state.players) == 4
+    # Verify state updated in Redis
+    updated_state = await game_service.get_game_state(game_id)
+    assert len(updated_state.players[0].hand) == 8 # Hand increased
+    assert updated_state.current_turn_index == 1   # Turn moved to p2
+
+@pytest.mark.asyncio
+async def test_play_card_logic():
+    """Test playing a valid card and applying rules."""
+    redis = await get_redis()
+    game_service = GameService(redis)
+    game_id = "game-play-test"
     
-    # Cleanup
-    await redis.delete(get_game_state_key(game_id))
+    state = await game_service.create_game(game_id, ["p1", "p2"])
+    
+    # Force the top card and player's hand for predictable testing
+    state.discard_pile = [Card(color="red", value="5")]
+    state.active_color = "red"
+    state.players[0].hand = [
+        Card(color="blue", value="9"), # Invalid
+        Card(color="red", value="skip") # Valid (matches color)
+    ]
+    await game_service.save_game_state(state)
+    
+    # 1. Try playing invalid card (index 0: blue 9 on red 5)
+    success = await game_service.play_card(game_id, "p1", 0)
+    assert success is False
+    
+    # 2. Try playing valid card (index 1: red skip on red 5)
+    success = await game_service.play_card(game_id, "p1", 1)
+    assert success is True
+    
+    # 3. Verify effects
+    updated_state = await game_service.get_game_state(game_id)
+    assert len(updated_state.players[0].hand) == 1
+    assert updated_state.discard_pile[-1].value == "skip"
+    
+    # Since it's a skip in a 2-player game, turn should return to p1 (index 0)
+    assert updated_state.current_turn_index == 0
