@@ -1,11 +1,21 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.api.websockets import queue
+from app.api.websockets import queue, room
+from app.redis_client import redis_client
 
-# Initialize the FastAPI application
-app = FastAPI(title="UNO Game Server")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic: Runs when the server starts (nothing needed for now)
+    yield
+    # Shutdown logic: Cleanly close Redis connection pool on server stop
+    await redis_client.aclose()
 
-# Register the matchmaking websocket router
+# Initialize FastAPI with the lifespan handler
+app = FastAPI(title="UNO Game Server", lifespan=lifespan)
+
+# Register all websocket routers
 app.include_router(queue.router)
+app.include_router(room.router)
 
 @app.get("/")
 def read_root():
