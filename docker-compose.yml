@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # 1. Redis Database Service
+  redis:
+    image: redis:7-alpine
+    container_name: uno-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # 2. FastAPI Backend Service
+  backend:
+    build: .
+    container_name: uno-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Override the default localhost REDIS_URL to point to the redis container
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
