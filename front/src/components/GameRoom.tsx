@@ -75,23 +75,28 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, onExit }) 
   if (!gameState) return null;
 
   return (
-    // تم اختصاصی پرتغال: گرادیانت شعاعی از نارنجی روشن به مشکی
-    <div className="relative flex flex-col justify-between w-full h-screen max-h-[640px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-600 via-orange-900 to-black text-white overflow-hidden p-4 select-none shadow-inner">
+    // بک‌گراند کاملاً تاریک و شیک
+    <div className="relative flex flex-col justify-between w-full h-screen max-h-[640px] bg-slate-950 text-white overflow-hidden p-4 select-none">
       
-      {/* واترمارک بزرگ پس‌زمینه (لوگو/اسم پرتغال) */}
+      {/* هاله نوری نارنجی ملایم در مرکز میز */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(234,88,12,0.15)_0%,_transparent_60%)] pointer-events-none z-0"></div>
+
+      {/* واترمارک مدرن، افقی و بسیار تمیز در مرکز */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
-        <div className="transform -rotate-12 flex flex-col items-center opacity-[0.06]">
-          <span className="text-[10rem] leading-none font-black text-white drop-shadow-2xl">پرتغال</span>
-          <span className="text-4xl font-black tracking-[0.8em] text-white ml-4 mt-2">PORTEGHAL</span>
-        </div>
+        <span className="text-6xl sm:text-7xl font-black text-white opacity-[0.03] tracking-[0.3em] uppercase">
+          Porteghal
+        </span>
+        <span className="text-xl sm:text-2xl font-bold text-orange-500 opacity-[0.15] tracking-[0.8em] mt-2 ml-3">
+          پرتغال
+        </span>
       </div>
 
       {/* Header */}
       <header className="relative flex justify-between items-center h-10 z-10">
-        <button onClick={onExit} className="text-xs font-bold text-orange-200 hover:text-white px-4 py-2 rounded-full bg-black/30 border border-orange-500/30 backdrop-blur-md transition-all">
+        <button onClick={onExit} className="text-xs font-bold text-slate-400 hover:text-white px-4 py-2 rounded-full bg-slate-900/80 border border-slate-800 backdrop-blur-md transition-all">
           ← Leave
         </button>
-        <span className="text-xs font-mono font-bold text-orange-300 bg-black/40 px-3 py-1 rounded-full border border-orange-500/30">
+        <span className="text-xs font-mono font-bold text-orange-400/70 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-800">
           ROOM: {gameId.substring(0, 8)}
         </span>
       </header>
@@ -119,7 +124,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, onExit }) 
             className={`
               relative w-20 h-28 rounded-xl border-[3px] border-white bg-red-600 
               shadow-[0_8px_15px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center cursor-pointer transform-gpu active:scale-95 transition-all
-              ${isMyTurn ? 'ring-4 ring-emerald-400 ring-offset-4 ring-offset-orange-900 animate-pulse' : 'opacity-90'}
+              ${isMyTurn ? 'ring-4 ring-orange-500 ring-offset-4 ring-offset-slate-950 animate-pulse' : 'opacity-90'}
             `}
           >
             <div className="absolute -bottom-2 -right-2 w-full h-full rounded-xl border-[3px] border-white bg-red-800 -z-10"></div>
@@ -140,8 +145,8 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, onExit }) 
           <div className={`
             px-6 py-2 rounded-full border-2 text-xs font-black tracking-widest flex items-center gap-2 transition-all shadow-xl
             ${isMyTurn 
-              ? 'bg-emerald-500 border-emerald-400 text-white scale-110 animate-bounce' 
-              : 'bg-black/40 border-orange-500/30 text-orange-200 backdrop-blur-md'
+              ? 'bg-orange-500 border-orange-400 text-white scale-110 animate-bounce' 
+              : 'bg-slate-900/80 border-slate-800 text-slate-500 backdrop-blur-md'
             }
           `}>
             {isMyTurn ? 'YOUR TURN' : 'WAITING...'}
@@ -158,8 +163,8 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, onExit }) 
       {/* Color Picker Modal */}
       {showColorPicker && (
         <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-orange-950 border border-orange-800 p-6 rounded-3xl max-w-xs w-full text-center shadow-2xl">
-            <h3 className="text-sm font-black tracking-widest text-orange-200 mb-6">CHOOSE COLOR</h3>
+          <div className="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-xs w-full text-center shadow-2xl">
+            <h3 className="text-sm font-black tracking-widest text-white mb-6">CHOOSE COLOR</h3>
             <div className="grid grid-cols-2 gap-4">
               <button onClick={() => handleColorSelect('red')} className="h-16 rounded-2xl bg-red-500 border-2 border-white shadow-lg active:scale-95 transition-all"></button>
               <button onClick={() => handleColorSelect('blue')} className="h-16 rounded-2xl bg-blue-500 border-2 border-white shadow-lg active:scale-95 transition-all"></button>
