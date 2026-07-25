@@ -5,6 +5,7 @@ from redis.asyncio import Redis
 from app.redis_client import get_redis
 from app.managers.room_manager import room_manager
 from app.services.game_service import GameService
+from app.services.prize_service import report_winner, update_room_status
 
 # Create router for the active game room websockets
 router = APIRouter()
@@ -89,6 +90,14 @@ async def room_websocket(websocket: WebSocket, game_id: str, player_id: str, red
                         "type": "state_update",
                         "state": new_state.model_dump()
                     })
+                    # Porteghal integration: report winner + mark room finished
+                    if new_state.status == "finished" and new_state.winner:
+                        await report_winner(
+                            room_id=game_id,
+                            player_id=new_state.winner,
+                            win_type="normal",
+                        )
+                        await update_room_status(room_id=game_id, status="finished")
                 else:
                     await websocket.send_json({"type": "error", "message": "Invalid move or not your turn"})
 
