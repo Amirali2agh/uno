@@ -1,6 +1,8 @@
 /**
  * Resolves the player_id dynamically from external application entry points
  * supporting URL query parameters, with safe local storage fallbacks.
+ *
+ * Returns { playerId, playerName, playerAvatar } from URL query params.
  */
 export const resolvePlayerId = (): string => {
   try {
@@ -42,4 +44,29 @@ export const resolvePlayerId = (): string => {
 
   console.log('[User Resolver] Generated local fallback player ID:', fallbackId);
   return fallbackId;
+};
+
+/**
+ * Returns player display info extracted from URL query params.
+ */
+export interface PlayerInfo {
+  playerId: string;
+  playerName: string;
+  playerAvatar: string;
+}
+
+export const resolvePlayerInfo = (): PlayerInfo => {
+  const playerId = resolvePlayerId();
+  let playerName = '';
+  let playerAvatar = '';
+
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    playerName = urlParams.get('playerName') || urlParams.get('player_name') || '';
+    playerAvatar = urlParams.get('playerAvatar') || urlParams.get('player_avatar') || '';
+  } catch (err) {
+    console.error('[User Resolver] Failed to read name/avatar from URL:', err);
+  }
+
+  return { playerId, playerName, playerAvatar };
 };

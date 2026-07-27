@@ -8,29 +8,40 @@ import type { GameState, PlayerState } from '../types/uno';
 interface GameRoomProps {
   gameId: string;
   playerId: string;
+  playerName: string;
+  playerAvatar: string;
   onExit: () => void;
 }
 
-export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, onExit }) => {
+export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName, playerAvatar, onExit }) => {
   const { connectRoom, sendAction, subscribe } = useUnoSocket();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [errorLog, setErrorLog] = useState<string | null>(null);
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
   const [pendingCardIndex, setPendingCardIndex] = useState<number | null>(null);
+  const [gameOver, setGameOver] = useState<{ reason: string } | null>(null);
 
   useEffect(() => {
-    connectRoom(gameId, playerId);
+    connectRoom(gameId, playerId, playerName, playerAvatar);
     const unsubscribeState = subscribe('state_update', (newState) => {
       setGameState(newState);
       setErrorLog(null);
+      // If state says finished but no game_over event came, still show the overlay
+      if (newState.status === 'finished' && !gameOver) {
+        setGameOver({ reason: newState.winner ? `${newState.winner} won!` : 'Game finished' });
+      }
     });
     const unsubscribeError = subscribe('error', (message) => {
       setErrorLog(message);
       setTimeout(() => setErrorLog(null), 3000);
     });
+    const unsubscribeGameOver = subscribe('game_over', (payload) => {
+      setGameOver({ reason: payload.reason });
+    });
     return () => {
       unsubscribeState();
       unsubscribeError();
+      unsubscribeGameOver();
     };
   }, [gameId, playerId, connectRoom, subscribe]);
 
@@ -141,7 +152,22 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, onExit }) 
 
       {/* Player Hand & Turn Indicator */}
       <div className="relative flex flex-col items-center gap-2 h-48 overflow-visible z-10">
-        <div className="flex flex-col items-center mb-2">
+
+        {/* Local Player Info */}
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/60 border border-slate-800/50 backdrop-blur-sm">
+          <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 overflow-hidden">
+            {playerAvatar ? (
+              <img src={playerAvatar} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[10px] font-bold text-slate-300">
+                {(playerName || playerId).substring(0, 2).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <span className="text-xs font-semibold text-slate-200">{playerName || playerId}</span>
+        </div>
+
+        <div className="flex flex-col items-center mb-4">
           <div className={`
             px-6 py-2 rounded-full border-2 text-xs font-black tracking-widest flex items-center gap-2 transition-all shadow-xl
             ${isMyTurn 
@@ -154,11 +180,28 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, onExit }) 
         </div>
 
         {myPlayerState && (
-          <div className="w-full h-32 overflow-visible">
+          <div className="w-full h-32 overflow-visible pb-4">
             <CardHand hand={myPlayerState.hand} onPlayCard={handlePlayCard} />
           </div>
         )}
       </div>
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div className="absolute inset-0 z-40 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-8">
+          <div className="bg-slate-900 border border-slate-700/50 p-8 rounded-3xl max-w-xs w-full text-center shadow-2xl">
+            <div className="text-5xl mb-4">🏆</div>
+            <h2 className="text-xl font-black text-white mb-2">Game Over</h2>
+            <p className="text-sm text-slate-400 mb-6">{gameOver.reason}</p>
+            <button
+              onClick={onExit}
+              className="w-full py-3 rounded-xl bg-orange-600 text-white font-bold text-sm hover:bg-orange-500 transition-all active:scale-95 shadow-lg"
+            >
+              ← Back to Lobby
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Color Picker Modal */}
       {showColorPicker && (

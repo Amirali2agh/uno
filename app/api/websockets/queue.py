@@ -10,7 +10,14 @@ from app.services.game_service import GameService
 router = APIRouter()
 
 @router.websocket("/ws/queue/{player_count}")
-async def queue_endpoint(websocket: WebSocket, player_count: int, player_id: str, redis: Redis = Depends(get_redis)):
+async def queue_endpoint(
+    websocket: WebSocket,
+    player_count: int,
+    player_id: str,
+    player_name: str = "",
+    player_avatar: str = "",
+    redis: Redis = Depends(get_redis),
+):
     if player_count not in [2, 4]:
         await websocket.close(code=1003, reason="Invalid player count")
         return
@@ -20,17 +27,24 @@ async def queue_endpoint(websocket: WebSocket, player_count: int, player_id: str
 
     await queue_manager.connect(player_id, websocket)
 
+    player_data = {
+        "player_id": player_id,
+        "player_name": player_name,
+        "player_avatar": player_avatar,
+        "player_count": player_count,
+    }
+
     try:
-        await queue_service.join_queue(player_id, player_count)
+        await queue_service.join_queue(player_data)
         matched_players = await queue_service.try_match(player_count)
 
         if matched_players:
             game_id = str(uuid.uuid4())
             await game_service.create_game(game_id, matched_players)
 
-            for pid in matched_players:
-                await queue_manager.send_match_found(pid, game_id)
-                queue_manager.disconnect(pid)
+            for pdata in matched_players:
+                await queue_manager.send_match_found(pdata["player_id"], game_id)
+                queue_manager.disconnect(pdata["player_id"])
 
         while True:
             data = await websocket.receive_text()

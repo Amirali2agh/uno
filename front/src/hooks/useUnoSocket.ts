@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import type { GameState, RoomMessage, GameAction, MatchFoundMessage } from '../types/uno';
+import type { GameState, RoomMessage, GameAction, GameOverPayload } from '../types/uno';
 
 // --- Type definition for our lightweight PubSub event map ---
 type UnoEventMap = {
@@ -7,6 +7,7 @@ type UnoEventMap = {
   player_status: (payload: { player_id: string; status: 'connected' | 'disconnected' }) => void;
   error: (message: string) => void;
   match_found: (gameId: string) => void;
+  game_over: (payload: GameOverPayload) => void;
 };
 
 export const useUnoSocket = () => {
@@ -24,11 +25,11 @@ export const useUnoSocket = () => {
   const getWsUrl = useCallback((path: string): string => {
     try {
       const hostname = window.location.hostname || 'localhost';
-      const port = '8000'; // Default FastAPI Backend Port
-      return `ws://${hostname}:${port}${path}`;
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${hostname}${path}`;
     } catch (err) {
       console.error('[WS Resolution Error] Failed to resolve hostname:', err);
-      return `ws://localhost:8000${path}`;
+      return `ws://localhost${path}`;
     }
   }, []);
 
@@ -62,10 +63,13 @@ export const useUnoSocket = () => {
   }, []);
 
   // --- Connect to Queue WebSoket (/ws/queue) ---
-  const connectQueue = useCallback((playerCount: 2 | 4, playerId: string) => {
+  const connectQueue = useCallback((playerCount: 2 | 4, playerId: string, playerName?: string, playerAvatar?: string) => {
     if (queueWsRef.current && queueWsRef.current.readyState === WebSocket.OPEN) return;
 
-    const path = `/ws/queue/${playerCount}?player_id=${encodeURIComponent(playerId)}`;
+    const params = new URLSearchParams({ player_id: playerId });
+    if (playerName) params.append('player_name', playerName);
+    if (playerAvatar) params.append('player_avatar', playerAvatar);
+    const path = `/ws/queue/${playerCount}?${params.toString()}`;
     const url = getWsUrl(path);
 
     console.log(`[Queue WS] Connecting to: ${url}`);
@@ -99,10 +103,13 @@ export const useUnoSocket = () => {
   }, [getWsUrl, emit]);
 
   // --- Connect to Room WebSocket (/ws/room) ---
-  const connectRoom = useCallback((gameId: string, playerId: string) => {
+  const connectRoom = useCallback((gameId: string, playerId: string, playerName?: string, playerAvatar?: string) => {
     if (roomWsRef.current && roomWsRef.current.readyState === WebSocket.OPEN) return;
 
-    const path = `/ws/room/${gameId}?player_id=${encodeURIComponent(playerId)}`;
+    const params = new URLSearchParams({ player_id: playerId });
+    if (playerName) params.append('player_name', playerName);
+    if (playerAvatar) params.append('player_avatar', playerAvatar);
+    const path = `/ws/room/${gameId}?${params.toString()}`;
     const url = getWsUrl(path);
 
     console.log(`[Room WS] Connecting to game room: ${url}`);
@@ -125,6 +132,11 @@ export const useUnoSocket = () => {
             break;
           case 'error':
             emit('error', payload.message);
+            break;
+          case 'game_over':
+            latestGameStateRef.current = payload.state;
+            emit('game_over', { reason: payload.reason, state: payload.state });
+            emit('state_update', payload.state);
             break;
           default:
             console.warn('[Room WS Warn] Unknown message type received:', payload);

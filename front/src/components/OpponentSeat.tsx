@@ -13,6 +13,9 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
   customCardBack,
 }) => {
   const cardCount = player.hand.length;
+  const displayName = player.player_name || player.player_id;
+  const avatarInitial = displayName.substring(0, 2).toUpperCase();
+  const hasAvatar = !!player.player_avatar;
 
   // Generate array representation of card back indices for rendering loop
   const cardBacks = useMemo(() => {
@@ -30,10 +33,14 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         }
       `}>
         {/* Profile Avatar Frame */}
-        <div className="relative w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
-          <span className="text-xs font-bold text-slate-300">
-            {player.player_id.substring(0, 2).toUpperCase()}
-          </span>
+        <div className="relative w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 overflow-hidden">
+          {hasAvatar ? (
+            <img src={player.player_avatar} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xs font-bold text-slate-300">
+              {avatarInitial}
+            </span>
+          )}
           {/* Active Turn Pulsing Dot */}
           {isCurrentTurn && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
@@ -45,7 +52,7 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
 
         {/* Username & Card Count */}
         <div className="flex flex-col items-start leading-none">
-          <span className="text-xs font-semibold text-slate-200 tracking-tight">{player.player_id}</span>
+          <span className="text-xs font-semibold text-slate-200 tracking-tight">{displayName}</span>
           <span className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1">
             🃏 <span className="text-emerald-400">{cardCount}</span> Cards
           </span>

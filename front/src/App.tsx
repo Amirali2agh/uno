@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameRoom } from './components/GameRoom.tsx';
 import { useUnoSocket } from './hooks/useUnoSocket.ts';
-import { resolvePlayerId } from './utils/userResolver.ts';
+import { resolvePlayerInfo } from './utils/userResolver.ts';
 
 type ScreenState = 'lobby' | 'queueing' | 'playing';
 
@@ -9,16 +9,20 @@ export const App: React.FC = () => {
   // --- Application States ---
   const [screen, setScreen] = useState<ScreenState>('lobby');
   const [playerId, setPlayerId] = useState<string>('');
+  const [playerName, setPlayerName] = useState<string>('');
+  const [playerAvatar, setPlayerAvatar] = useState<string>('');
   const [playerCount, setPlayerCount] = useState<2 | 4>(2);
   const [gameId, setGameId] = useState<string | null>(null);
 
   // --- WebSocket Hook ---
   const { connectQueue, cancelQueue, subscribe, disconnectAll } = useUnoSocket();
 
-  // 1. Resolve Player ID on initial load
+  // 1. Resolve Player Info on initial load
   useEffect(() => {
-    const resolvedId = resolvePlayerId();
-    setPlayerId(resolvedId);
+    const info = resolvePlayerInfo();
+    setPlayerId(info.playerId);
+    setPlayerName(info.playerName);
+    setPlayerAvatar(info.playerAvatar);
   }, []);
 
   // 2. Listen for Matchmaking Success Event
@@ -38,7 +42,7 @@ export const App: React.FC = () => {
   const handleJoinQueue = () => {
     if (!playerId) return;
     setScreen('queueing');
-    connectQueue(playerCount, playerId);
+    connectQueue(playerCount, playerId, playerName, playerAvatar);
   };
 
   const handleCancelQueue = () => {
@@ -58,7 +62,9 @@ export const App: React.FC = () => {
     return (
       <GameRoom 
         gameId={gameId} 
-        playerId={playerId} 
+        playerId={playerId}
+        playerName={playerName}
+        playerAvatar={playerAvatar}
         onExit={handleExitGame} 
       />
     );
@@ -103,7 +109,7 @@ export const App: React.FC = () => {
         {/* Player Info */}
         <div className="mb-6 bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50 flex justify-between items-center">
           <span className="text-xs font-semibold text-slate-400">Playing as:</span>
-          <span className="text-sm font-bold text-emerald-400">{playerId || 'Loading...'}</span>
+          <span className="text-sm font-bold text-emerald-400">{playerName || playerId || 'Loading...'}</span>
         </div>
 
         {/* Game Mode Selector */}

@@ -10,10 +10,17 @@ from app.services.game_service import GameService
 router = APIRouter()
 
 @router.websocket("/ws/room/{game_id}")
-async def room_websocket(websocket: WebSocket, game_id: str, player_id: str, redis: Redis = Depends(get_redis)):
+async def room_websocket(
+    websocket: WebSocket,
+    game_id: str,
+    player_id: str,
+    player_name: str = "",
+    player_avatar: str = "",
+    redis: Redis = Depends(get_redis),
+):
     """
     WebSocket endpoint for active game play.
-    URL Example: ws://localhost:8000/ws/room/abc-123?player_id=user-99
+    URL Example: ws://localhost:8000/ws/room/abc-123?player_id=user-99&player_name=Ali&player_avatar=/avatar.jpg
     """
     game_service = GameService(redis)
     

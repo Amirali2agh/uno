@@ -14,6 +14,8 @@ class Card(BaseModel):
 
 class PlayerState(BaseModel):
     player_id: str
+    player_name: str = ""
+    player_avatar: str = ""
     hand: List[Card] = []
 
 class GameState(BaseModel):
@@ -50,10 +52,18 @@ class GameService:
         random.shuffle(deck)
         return deck
 
-    async def create_game(self, game_id: str, player_ids: List[str]) -> GameState:
+    async def create_game(self, game_id: str, players_data: list[dict]) -> GameState:
         """ساخت بازی جدید و پخش کارت‌ها"""
         deck = self._generate_uno_deck()
-        players = [PlayerState(player_id=pid, hand=[deck.pop() for _ in range(7)]) for pid in player_ids]
+        players = [
+            PlayerState(
+                player_id=p["player_id"],
+                player_name=p.get("player_name", ""),
+                player_avatar=p.get("player_avatar", ""),
+                hand=[deck.pop() for _ in range(7)]
+            )
+            for p in players_data
+        ]
         
         discard_pile = []
         while True:

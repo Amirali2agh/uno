@@ -9,6 +9,8 @@ export interface Card {
 
 export interface PlayerState {
   player_id: string; // Unique string identifier for the player
+  player_name: string; // Display name of the player
+  player_avatar: string; // Avatar URL of the player
   hand: Card[]; // List of cards in this player's hand (filtered or unfiltered from backend)
 }
 
@@ -31,6 +33,11 @@ export interface MatchFoundMessage {
   game_id: string; // Game room ID assigned for the connection
 }
 
+export interface GameOverPayload {
+  reason: string; // Explanation of why the game ended (e.g. "Player disconnected")
+  state: GameState; // Final game state snapshot
+}
+
 export interface StateUpdateMessage {
   type: 'state_update'; // Broadcasted state payload after turns/draws
   state: GameState; // Complete payload of the active game state
@@ -47,8 +54,14 @@ export interface ErrorMessage {
   message: string; // System message to print/display to the active user
 }
 
+export interface GameOverMessage {
+  type: 'game_over';
+  reason: string; // Why the game ended
+  state: GameState; // Final game state
+}
+
 // Union representing all possible messages from Room WebSocket
-export type RoomMessage = StateUpdateMessage | PlayerStatusMessage | ErrorMessage;
+export type RoomMessage = StateUpdateMessage | PlayerStatusMessage | ErrorMessage | GameOverMessage;
 
 // --- Client-to-Server WebSocket Payloads (Outgoing Actions) ---
 

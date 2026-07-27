@@ -51,7 +51,7 @@ async def test_disconnect_timeout(redis):
     manager = RoomManager(timeout_seconds=1)
     
     game_id = "timeout-game-id"
-    await game_service.create_game(game_id, ["p1", "p2"])
+    await game_service.create_game(game_id, [{"player_id": "p1"}, {"player_id": "p2"}])
     
     ws1 = MockWebSocket()
     ws2 = MockWebSocket()
