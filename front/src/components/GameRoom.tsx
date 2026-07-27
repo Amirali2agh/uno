@@ -151,7 +151,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       </div>
 
       {/* Player Hand & Turn Indicator */}
-      <div className="relative flex flex-col items-center gap-2 h-48 overflow-visible z-10">
+      <div className="relative flex flex-col items-center gap-2 overflow-visible z-10">
 
         {/* Local Player Info */}
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/60 border border-slate-800/50 backdrop-blur-sm">
@@ -167,7 +167,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
           <span className="text-xs font-semibold text-slate-200">{playerName || playerId}</span>
         </div>
 
-        <div className="flex flex-col items-center mb-4">
+        <div className="flex flex-col items-center mb-2">
           <div className={`
             px-6 py-2 rounded-full border-2 text-xs font-black tracking-widest flex items-center gap-2 transition-all shadow-xl
             ${isMyTurn 
