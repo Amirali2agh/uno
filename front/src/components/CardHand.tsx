@@ -77,7 +77,7 @@ export const CardHand: React.FC<CardHandProps> = ({
   }, [validCards, containerWidth]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-40 max-w-md mx-auto flex items-end justify-center overflow-visible pb-4">
+    <div ref={containerRef} className="relative w-full h-28 flex items-end justify-center overflow-visible">
       {/* Absolute center zero-point anchor container for trigonometric projection */}
       <div className="absolute bottom-4 flex items-center justify-center w-0 h-0 overflow-visible">
         <AnimatePresence mode="popLayout">

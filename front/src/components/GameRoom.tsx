@@ -87,7 +87,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
 
   return (
     // بک‌گراند کاملاً تاریک و شیک
-    <div className="relative flex flex-col justify-between w-full h-screen max-h-[640px] bg-slate-950 text-white overflow-hidden p-4 select-none">
+    <div className="relative flex flex-col w-full h-screen max-h-[640px] bg-slate-950 text-white overflow-hidden p-4 pt-4 pb-2 select-none">
       
       {/* هاله نوری نارنجی ملایم در مرکز میز */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(234,88,12,0.15)_0%,_transparent_60%)] pointer-events-none z-0"></div>
@@ -103,7 +103,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       </div>
 
       {/* Header */}
-      <header className="relative flex justify-between items-center h-10 z-10">
+      <header className="relative flex justify-between items-center h-10 shrink-0 z-10">
         <button onClick={onExit} className="text-xs font-bold text-slate-400 hover:text-white px-4 py-2 rounded-full bg-slate-900/80 border border-slate-800 backdrop-blur-md transition-all">
           ← Leave
         </button>
@@ -119,14 +119,14 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       )}
 
       {/* Opponents */}
-      <div className="relative flex justify-center items-center gap-6 h-20 overflow-visible mt-2 z-10">
+      <div className="relative flex justify-center items-center gap-6 h-16 shrink-0 overflow-visible mt-1 z-10">
         {sortedOpponents.map((opponent) => (
           <OpponentSeat key={opponent.player_id} player={opponent} isCurrentTurn={gameState.players[gameState.current_turn_index]?.player_id === opponent.player_id} />
         ))}
       </div>
 
       {/* Center Table */}
-      <div className="relative flex flex-col items-center justify-center flex-1 my-4 z-10">
+      <div className="relative flex flex-col items-center justify-center flex-1 min-h-0 z-10">
         <div className="flex items-center justify-center gap-10 overflow-visible">
           
           {/* Draw Deck */}
@@ -151,11 +151,11 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       </div>
 
       {/* Player Hand & Turn Indicator */}
-      <div className="relative flex flex-col items-center gap-2 overflow-visible z-10">
+      <div className="relative flex flex-col items-center z-10">
 
         {/* Local Player Info */}
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/60 border border-slate-800/50 backdrop-blur-sm">
-          <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 overflow-hidden">
+        <div className="flex items-center gap-2 px-3 py-0.5 rounded-full bg-slate-900/60 border border-slate-800/50 backdrop-blur-sm">
+          <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 overflow-hidden shrink-0">
             {playerAvatar ? (
               <img src={playerAvatar} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -167,9 +167,9 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
           <span className="text-xs font-semibold text-slate-200">{playerName || playerId}</span>
         </div>
 
-        <div className="flex flex-col items-center mb-2">
+        <div className="flex flex-col items-center mt-1">
           <div className={`
-            px-6 py-2 rounded-full border-2 text-xs font-black tracking-widest flex items-center gap-2 transition-all shadow-xl
+            px-5 py-1.5 rounded-full border-2 text-[11px] font-black tracking-widest flex items-center gap-2 transition-all shadow-xl
             ${isMyTurn 
               ? 'bg-orange-500 border-orange-400 text-white scale-110 animate-bounce' 
               : 'bg-slate-900/80 border-slate-800 text-slate-500 backdrop-blur-md'
@@ -180,7 +180,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
         </div>
 
         {myPlayerState && (
-          <div className="w-full h-32 overflow-visible pb-4">
+          <div className="w-full overflow-visible -mt-1">
             <CardHand hand={myPlayerState.hand} onPlayCard={handlePlayCard} />
           </div>
         )}
