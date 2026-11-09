@@ -74,7 +74,7 @@ export const App: React.FC = () => {
   // --- Render: Queueing Screen ---
   if (screen === 'queueing') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#1a2c34] text-white p-4 select-none">
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-[#1a2c34] text-white p-4 select-none">
         <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-xs w-full text-center">
           <div className="relative w-16 h-16 mb-6">
             <div className="absolute inset-0 rounded-full border-t-4 border-emerald-500 animate-spin"></div>
@@ -96,7 +96,7 @@ export const App: React.FC = () => {
 
   // --- Render: Lobby Screen ---
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#1a2c34] text-white p-4 select-none">
+    <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-[#1a2c34] text-white p-4 select-none">
       <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full">
         
         {/* Logo / Title */}

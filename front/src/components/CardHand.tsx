@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Card } from './Card';
 import type { Card as CardType } from '../types/uno';
 
@@ -18,6 +18,7 @@ export const CardHand: React.FC<CardHandProps> = ({
   isPlayable,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
   const [containerWidth, setContainerWidth] = useState(320);
 
   // Measure container width on mount and resize
@@ -97,7 +98,7 @@ export const CardHand: React.FC<CardHandProps> = ({
               <motion.div
                 key={`${originalIndex}-${card.color}-${card.value}`}
                 layout // Smoothly slides adjacent cards when gap transitions occur
-                initial={{ opacity: 0, scale: 0.2, y: 100 }}
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.2, y: 100 }}
                 animate={{
                   opacity: 1,
                   scale: 1,
@@ -106,12 +107,11 @@ export const CardHand: React.FC<CardHandProps> = ({
                   rotate: transform.rotate,
                 }}
                 exit={{ opacity: 0, scale: 0.5, y: -80, rotate: 0 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 140,
-                  damping: 18,
-                  mass: 0.8,
-                }}
+                transition={
+                  reduceMotion
+                    ? { duration: 0 }
+                    : { type: 'spring', stiffness: 140, damping: 18, mass: 0.8 }
+                }
                 style={{
                   position: 'absolute',
                   transformOrigin: 'bottom center', // Crucial: anchor scaling relative to the hand base

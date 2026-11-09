@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Card } from './Card.tsx'; // Explicitly typed with TSX extension
 import type { Card as CardType } from '../types/uno';
 
@@ -24,6 +24,8 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
   discardPile,
   activeColor,
 }) => {
+  const reduceMotion = useReducedMotion();
+
   // Extract only the top few cards to keep DOM rendering lightweight
   const visibleCards = useMemo(() => {
     return discardPile.slice(-5); // Render only the top 5 cards for layout stack depth
@@ -67,7 +69,7 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
         return (
           <motion.div
             key={`${card.color}-${card.value}-${discardPile.length - visibleCards.length + idx}`}
-            initial={{ scale: 1.5, opacity: 0, y: -100 }}
+            initial={reduceMotion ? false : { scale: 1.5, opacity: 0, y: -100 }}
             animate={{
               scale: 1,
               opacity: 1,
@@ -75,11 +77,11 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
               y: style.y,
               rotate: style.rotate,
             }}
-            transition={{
-              type: 'spring',
-              stiffness: 150,
-              damping: 15,
-            }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { type: 'spring', stiffness: 150, damping: 15 }
+            }
             style={{ position: 'absolute' }}
           >
             <Card
