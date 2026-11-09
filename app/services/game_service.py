@@ -247,17 +247,34 @@ class GameService:
             if index != excluded_index
         )
 
+    def _recycle_discard_pile(self, state: GameState) -> bool:
+        """برگرداندن کارت‌های سوخته (به‌جز کارت روی زمین) به زمین بازی
+
+        Returns True when a new draw pile was built. The top discard card always
+        stays on the table, and a recycled wild card is a plain wild again — the
+        colour chosen for it only lives in ``active_color``.
+        """
+        if len(state.discard_pile) <= 1:
+            return False  # nothing to recycle; the top card must stay on the table
+
+        top_card = state.discard_pile[-1]
+        recycled_cards = state.discard_pile[:-1]
+        random.shuffle(recycled_cards)
+        state.draw_pile = recycled_cards
+        state.discard_pile = [top_card]
+        return True
+
     def _draw_cards_from_pile(self, state: GameState, count: int) -> List[Card]:
-        """برداشتن کارت از زمین (اگر کارت‌ها تمام شد، کارت‌های سوخته را بُر می‌زند)"""
-        drawn = []
+        """برداشتن کارت از زمین (اگر کارت‌ها تمام شد، کارت‌های سوخته را بُر می‌زند)
+
+        Returns whatever could actually be dealt: with both piles exhausted the
+        result may hold fewer than ``count`` cards, and callers must not assume
+        otherwise.
+        """
+        drawn: List[Card] = []
         for _ in range(count):
-            if not state.draw_pile:
-                top_card = state.discard_pile.pop()
-                state.draw_pile = state.discard_pile
-                random.shuffle(state.draw_pile)
-                state.discard_pile = [top_card]
-                if not state.draw_pile:
-                    break
+            if not state.draw_pile and not self._recycle_discard_pile(state):
+                break
             drawn.append(state.draw_pile.pop())
         return drawn
 
