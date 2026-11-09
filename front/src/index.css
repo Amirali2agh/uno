@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+/* Respect the operating-system reduced-motion preference for every CSS animation
+   (spinners, pulses) — the JS animations check the same setting. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

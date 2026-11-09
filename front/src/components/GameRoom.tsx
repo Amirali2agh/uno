@@ -207,7 +207,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
   if (!gameState) {
     const failed = roomStatus === 'closed';
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white p-6 select-none">
+      <div className="flex flex-col items-center justify-center w-full min-h-[100dvh] bg-slate-950 text-white p-6 select-none">
         <div className="bg-slate-900/70 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
           {failed ? (
             <>
@@ -247,8 +247,8 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
   }
 
   return (
-    // بک‌گراند کاملاً تاریک و شیک
-    <div className="relative flex flex-col w-full h-screen max-h-[640px] bg-slate-950 text-white overflow-hidden p-4 pt-4 pb-2 select-none">
+    // Full-viewport table (no fixed height cap; the centre row shrinks instead)
+    <div className="relative flex flex-col w-full h-[100dvh] min-h-[360px] bg-slate-950 text-white overflow-hidden px-4 pt-3 pb-2 select-none">
       
       {/* هاله نوری نارنجی ملایم در مرکز میز */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(234,88,12,0.15)_0%,_transparent_60%)] pointer-events-none z-0"></div>
@@ -305,7 +305,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       )}
 
       {/* Opponents */}
-      <div className="relative flex justify-center items-center gap-6 h-16 shrink-0 overflow-visible mt-1 z-10">
+      <div className="relative flex flex-wrap justify-center items-center gap-3 sm:gap-6 min-h-16 shrink-0 overflow-visible mt-1 z-10">
         {sortedOpponents.map((opponent) => (
           <OpponentSeat
             key={opponent.player_id}
