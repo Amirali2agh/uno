@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 import math
@@ -12,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 class RoomManager:
     def __init__(self, timeout_seconds: int = 60):
+        # Identifies this worker in admin stats (counters are per process).
+        self.process_id = os.getpid()
         # Format: {game_id: {player_id: WebSocket}}
         self.rooms: dict[str, dict[str, WebSocket]] = {}
         self.timeout_seconds = timeout_seconds

@@ -113,6 +113,15 @@ Reason codes: `invalid_json`, `invalid_message`, `invalid_action`, `message_too_
 `must_play_drawn_card`, `invalid_card`, `color_required`, `invalid_color`,
 `wild4_has_matching_color`, `already_drawn`, `nothing_to_pass`, `cannot_call_uno`,
 `nothing_to_challenge`.
+🛠️ Admin Endpoint
+`GET /admin/stats` returns queue lengths (global, from Redis) and connection/room
+counters (per process). It is disabled until `ADMIN_TOKEN` is set:
+
+```bash
+export ADMIN_TOKEN=change-me
+curl -H "X-Admin-Token: change-me" http://localhost:8000/admin/stats
+```
+
 🐳 Docker Deployment
 Build the Docker image:
 code
