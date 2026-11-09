@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { GameRoom } from './components/GameRoom.tsx';
-import { useUnoSocket } from './hooks/useUnoSocket.ts';
+import { useSocket } from './context/SocketContext.tsx';
 import { resolvePlayerInfo } from './utils/userResolver.ts';
+import { debug } from './utils/logger';
 
 type ScreenState = 'lobby' | 'queueing' | 'playing';
 
@@ -15,7 +16,7 @@ export const App: React.FC = () => {
   const [gameId, setGameId] = useState<string | null>(null);
 
   // --- WebSocket Hook ---
-  const { connectQueue, cancelQueue, subscribe, disconnectAll } = useUnoSocket();
+  const { connectQueue, cancelQueue, subscribe, disconnectAll } = useSocket();
 
   // 1. Resolve Player Info on initial load
   useEffect(() => {
@@ -28,7 +29,7 @@ export const App: React.FC = () => {
   // 2. Listen for Matchmaking Success Event
   useEffect(() => {
     const unsubscribeMatch = subscribe('match_found', (matchedGameId: string) => {
-      console.log('[App] Match found! Transitioning to Game Room:', matchedGameId);
+      debug('[App] Match found! Transitioning to Game Room:', matchedGameId);
       setGameId(matchedGameId);
       setScreen('playing');
     });

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import type { GameState, RoomMessage, GameAction, GameOverPayload } from '../types/uno';
+import { debug, warn, error } from '../utils/logger';
 
 // --- Type definition for our lightweight PubSub event map ---
 type UnoEventMap = {
@@ -75,7 +76,7 @@ export const useUnoSocket = () => {
           // Cast arguments to bypass TypeScript tuple matching issues
           (callback as (...a: unknown[]) => void)(...args);
         } catch (err) {
-          console.error(`[PubSub Emit Error] Exception in listener for event "${event}":`, err);
+          error(`[PubSub Emit Error] Exception in listener for event "${event}":`, err);
         }
       });
     }
@@ -91,7 +92,7 @@ export const useUnoSocket = () => {
     const path = `/ws/queue/${playerCount}?${params.toString()}`;
     const url = getWsUrl(path);
 
-    console.log(`[Queue WS] Connecting to: ${url}`);
+    debug(`[Queue WS] Connecting to: ${url}`);
     const ws = new WebSocket(url);
     queueWsRef.current = ws;
 
@@ -99,25 +100,25 @@ export const useUnoSocket = () => {
     ws.onmessage = (event: MessageEvent) => {
       try {
         const message = JSON.parse(event.data);
-        console.log('[Queue WS] Message Received:', message);
+        debug('[Queue WS] Message Received:', message);
         
         // تغییر مهم: فقط چک می‌کنیم که game_id در پیام سرور وجود داشته باشد
         if (message.game_id) {
           emit('match_found', message.game_id);
         }
       } catch (err) {
-        console.error('[Queue WS Data Parsing Error] Original Data:', event.data, 'Error:', err);
+        error('[Queue WS Data Parsing Error] Original Data:', event.data, 'Error:', err);
       }
     };
 
     // Explicitly type WebSocket error as Event
-    ws.onerror = (error: Event) => {
-      console.error('[Queue WS Connection Error]:', error);
+    ws.onerror = (event: Event) => {
+      error('[Queue WS Connection Error]:', event);
       emit('error', 'Matchmaking queue connection failed.');
     };
 
     ws.onclose = () => {
-      console.log('[Queue WS] Disconnected.');
+      debug('[Queue WS] Disconnected.');
     };
   }, [getWsUrl, emit]);
 
@@ -149,7 +150,7 @@ export const useUnoSocket = () => {
     ws.onmessage = (event: MessageEvent) => {
       try {
         const payload: RoomMessage = JSON.parse(event.data);
-        console.log('[Room WS] Event Dispatcher:', payload.type);
+        debug('[Room WS] Event Dispatcher:', payload.type);
 
         switch (payload.type) {
           case 'state_update':
@@ -168,15 +169,15 @@ export const useUnoSocket = () => {
             emit('state_update', payload.state);
             break;
           default:
-            console.warn('[Room WS Warn] Unknown message type received:', payload);
+            warn('[Room WS Warn] Unknown message type received:', payload);
         }
       } catch (err) {
-        console.error('[Room WS Data Parsing Error] Original Data:', event.data, 'Error:', err);
+        error('[Room WS Data Parsing Error] Original Data:', event.data, 'Error:', err);
       }
     };
 
-    ws.onerror = (error: Event) => {
-      console.error('[Room WS Connection Error]:', error);
+    ws.onerror = (event: Event) => {
+      error('[Room WS Connection Error]:', event);
     };
 
     ws.onclose = () => {
@@ -224,27 +225,27 @@ export const useUnoSocket = () => {
   // --- Send Client Action (Draw / Play Card) ---
   const sendAction = useCallback((action: GameAction) => {
     if (!roomWsRef.current || roomWsRef.current.readyState !== WebSocket.OPEN) {
-      console.warn('[Room WS Warn] Action blocked, WebSocket is not open.');
+      warn('[Room WS Warn] Action blocked, WebSocket is not open.');
       emit('error', 'Cannot communicate with server. Connection lost.');
       return;
     }
 
     try {
-      console.log('[Room WS] Sending Client Action:', action.action);
+      debug('[Room WS] Sending Client Action:', action.action);
       roomWsRef.current.send(JSON.stringify(action));
     } catch (err) {
-      console.error('[Room WS Send Failure] Failed to send action payload:', action, 'Error:', err);
+      error('[Room WS Send Failure] Failed to send action payload:', action, 'Error:', err);
     }
   }, [emit]);
 
   // --- Cancel Matchmaking Queue ---
   const cancelQueue = useCallback(() => {
     if (queueWsRef.current && queueWsRef.current.readyState === WebSocket.OPEN) {
-      console.log('[Queue WS] Sending cancel matchmaking action.');
+      debug('[Queue WS] Sending cancel matchmaking action.');
       try {
         queueWsRef.current.send('cancel');
       } catch (err) {
-        console.error('[Queue WS Cancel Error] Failed to send cancel payload:', err);
+        error('[Queue WS Cancel Error] Failed to send cancel payload:', err);
       }
     }
   }, []);

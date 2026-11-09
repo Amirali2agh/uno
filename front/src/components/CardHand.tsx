@@ -31,12 +31,16 @@ export const CardHand: React.FC<CardHandProps> = ({
     return () => ro.disconnect();
   }, []);
 
-  // Compress array beforehand to avoid math anomalies with empty slots
-  const validCards = useMemo(() => hand.filter(Boolean), [hand]);
+  // Keep the *original* index of every card: the server addresses the hand by
+  // index, so filtering the array and re-indexing would play the wrong card.
+  const indexedCards = useMemo(
+    () => hand.map((card, index) => ({ card, index })).filter((entry) => Boolean(entry.card)),
+    [hand],
+  );
 
   // Trigonometric arc calculations memorized to prevent heavy layout recalculation
   const positionedCards = useMemo(() => {
-    const N = validCards.length;
+    const N = indexedCards.length;
     if (N === 0) return [];
 
     const cardWidth = 64; // w-16 in px — includes card width + gap
@@ -60,7 +64,7 @@ export const CardHand: React.FC<CardHandProps> = ({
     const angleStep = N > 1 ? maxSpread / (N - 1) : 0;
     const midIndex = (N - 1) / 2;
 
-    return validCards.map((card, index) => {
+    return indexedCards.map(({ card, index: originalIndex }, index) => {
       // Calculate relative degrees from the midpoint
       const cardAngleDeg = (index - midIndex) * angleStep;
       // Convert degrees to radians for mathematical functions
@@ -73,11 +77,11 @@ export const CardHand: React.FC<CardHandProps> = ({
 
       return {
         card,
-        originalIndex: index, // Track original index for action callbacks
+        originalIndex, // index inside the server-side hand
         transform: { x, y, rotate },
       };
     });
-  }, [validCards, containerWidth]);
+  }, [indexedCards, containerWidth]);
 
   return (
     <div ref={containerRef} className="relative w-full h-28 flex items-end justify-center overflow-visible">
@@ -91,7 +95,7 @@ export const CardHand: React.FC<CardHandProps> = ({
 
             return (
               <motion.div
-                key={`${card.color}-${card.value}-${originalIndex}`}
+                key={`${originalIndex}-${card.color}-${card.value}`}
                 layout // Smoothly slides adjacent cards when gap transitions occur
                 initial={{ opacity: 0, scale: 0.2, y: 100 }}
                 animate={{

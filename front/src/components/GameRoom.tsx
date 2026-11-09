@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useUnoSocket } from '../hooks/useUnoSocket.ts';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { useSocket } from '../context/SocketContext.tsx';
 import { CardHand } from './CardHand.tsx';
 import { DiscardPile } from './DiscardPile.tsx';
 import { OpponentSeat } from './OpponentSeat.tsx';
@@ -14,9 +14,10 @@ interface GameRoomProps {
 }
 
 export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName, playerAvatar, onExit }) => {
-  const { connectRoom, sendAction, subscribe, roomStatus } = useUnoSocket();
+  const { connectRoom, sendAction, subscribe, roomStatus } = useSocket();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [errorLog, setErrorLog] = useState<string | null>(null);
+  const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
   const [pendingCardIndex, setPendingCardIndex] = useState<number | null>(null);
   // Set when the player intends to announce UNO together with the next play.
@@ -32,11 +33,20 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
     });
     const unsubscribeError = subscribe('error', (message) => {
       setErrorLog(message);
-      setTimeout(() => setErrorLog(null), 3000);
+      // A single timer: a new error must not be cleared early by an older one.
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = setTimeout(() => {
+        setErrorLog(null);
+        errorTimerRef.current = null;
+      }, 3000);
     });
     return () => {
       unsubscribeState();
       unsubscribeError();
+      if (errorTimerRef.current) {
+        clearTimeout(errorTimerRef.current);
+        errorTimerRef.current = null;
+      }
     };
   }, [gameId, playerId, playerName, playerAvatar, connectRoom, subscribe]);
 
