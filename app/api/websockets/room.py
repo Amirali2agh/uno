@@ -46,10 +46,11 @@ async def room_websocket(
         "status": "connected"
     })
     
-    # Send the current game state to the newly connected player so they can render the UI
+    # Send the current game state to the newly connected player so they can render
+    # the UI. Only their own hand is included.
     await websocket.send_json({
         "type": "state_update",
-        "state": state.model_dump()
+        "state": state.for_player(player_id).model_dump()
     })
 
     try:
@@ -72,20 +73,14 @@ async def room_websocket(
                 if success:
                     # Fetch new state and broadcast to everyone
                     new_state = await game_service.get_game_state(game_id)
-                    await room_manager.broadcast(game_id, {
-                        "type": "state_update",
-                        "state": new_state.model_dump()
-                    })
+                    await room_manager.broadcast_state(game_id, new_state)
                 else:
                     await websocket.send_json({"type": "error", "message": "Cannot draw card (not your turn)"})
 
             elif action == "say_uno":
                 if await game_service.say_uno(game_id, player_id):
                     new_state = await game_service.get_game_state(game_id)
-                    await room_manager.broadcast(game_id, {
-                        "type": "state_update",
-                        "state": new_state.model_dump()
-                    })
+                    await room_manager.broadcast_state(game_id, new_state)
                 else:
                     await websocket.send_json({"type": "error", "message": "Cannot call UNO right now"})
 
@@ -93,11 +88,11 @@ async def room_websocket(
                 penalised = await game_service.challenge_uno(game_id, player_id)
                 if penalised:
                     new_state = await game_service.get_game_state(game_id)
-                    await room_manager.broadcast(game_id, {
-                        "type": "state_update",
-                        "state": new_state.model_dump(),
-                        "notice": {"type": "uno_penalty", "player_id": penalised},
-                    })
+                    await room_manager.broadcast_state(
+                        game_id,
+                        new_state,
+                        extra={"notice": {"type": "uno_penalty", "player_id": penalised}},
+                    )
                 else:
                     await websocket.send_json({"type": "error", "message": "Nothing to challenge"})
 
@@ -106,10 +101,7 @@ async def room_websocket(
                 success = await game_service.pass_turn(game_id, player_id)
                 if success:
                     new_state = await game_service.get_game_state(game_id)
-                    await room_manager.broadcast(game_id, {
-                        "type": "state_update",
-                        "state": new_state.model_dump()
-                    })
+                    await room_manager.broadcast_state(game_id, new_state)
                 else:
                     await websocket.send_json({"type": "error", "message": "Cannot pass turn"})
 
@@ -129,10 +121,7 @@ async def room_websocket(
                 if success:
                     # Fetch updated state and broadcast to everyone
                     new_state = await game_service.get_game_state(game_id)
-                    await room_manager.broadcast(game_id, {
-                        "type": "state_update",
-                        "state": new_state.model_dump()
-                    })
+                    await room_manager.broadcast_state(game_id, new_state)
                 else:
                     await websocket.send_json({"type": "error", "message": "Invalid move or not your turn"})
 
