@@ -27,8 +27,8 @@ pnpm-debug.log*
 
 # --- Tooling caches ---
 .vite/
-.issues/
 .cache/
+.npm-cache/
 
 # --- Editors / OS ---
 .vscode/
