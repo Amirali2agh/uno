@@ -4,10 +4,8 @@ from app.services.game_service import Card
 
 
 @pytest.mark.asyncio
-async def test_game_initialization(game_service):
-    game_state = await game_service.create_game(
-        "game-1", [{"player_id": "p1"}, {"player_id": "p2"}]
-    )
+async def test_game_initialization(start_game):
+    game_state = await start_game("game-1", [{"player_id": "p1"}, {"player_id": "p2"}])
 
     assert game_state.game_id == "game-1"
     assert len(game_state.players[0].hand) == 7
@@ -16,9 +14,9 @@ async def test_game_initialization(game_service):
 
 
 @pytest.mark.asyncio
-async def test_draw_card_logic(game_service):
+async def test_draw_card_logic(game_service, start_game):
     game_id = "game-draw-test"
-    await game_service.create_game(game_id, [{"player_id": "p1"}, {"player_id": "p2"}])
+    await start_game(game_id, [{"player_id": "p1"}, {"player_id": "p2"}])
 
     success = await game_service.draw_card(game_id, "p1")
 
@@ -26,11 +24,9 @@ async def test_draw_card_logic(game_service):
 
 
 @pytest.mark.asyncio
-async def test_play_card_logic(game_service):
+async def test_play_card_logic(game_service, start_game):
     game_id = "game-play-test"
-    state = await game_service.create_game(
-        game_id, [{"player_id": "p1"}, {"player_id": "p2"}]
-    )
+    state = await start_game(game_id, [{"player_id": "p1"}, {"player_id": "p2"}])
     state.discard_pile = [Card(color="red", value="5")]
     state.active_color = "red"
     state.players[0].hand = [Card(color="red", value="skip")]
