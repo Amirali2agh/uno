@@ -28,3 +28,18 @@ def get_player_disconnect_key(player_id: str) -> str:
     Example: uno:player:player-99:disconnect
     """
     return f"{BASE_PREFIX}:player:{player_id}:disconnect"
+
+def get_queue_players_key(player_count: int) -> str:
+    """
+    Generate the key for the payload hash of a matchmaking queue.
+    Example: uno:queue:2:players
+    """
+    return f"{BASE_PREFIX}:queue:{player_count}:players"
+
+
+def get_player_lock_key(player_id: str) -> str:
+    """
+    Generate the key for the per-player matchmaking lock.
+    Example: uno:lock:player:player-99
+    """
+    return f"{BASE_PREFIX}:lock:player:{player_id}"
