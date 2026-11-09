@@ -8,15 +8,15 @@ A highly scalable, real-time multiplayer UNO game server built with **FastAPI**,
 - **Smart Matchmaking:** Automated queue system for 2-player and 4-player game modes.
 - **UNO Rules:** Skip, Reverse, Draw 2, Wild, Wild 4 (with the "no matching colour" restriction),
   draw-then-play turns, the starting-card effect, and the UNO call/challenge penalty — all validated on the server side.
-- **Concurrency Control:** Utilizes Redis Distributed Locks (Redlock) to prevent race conditions during simultaneous card plays.
-- **Fault Tolerance:** 60-second automated disconnect timeout. If a player drops, the game waits; if they don't return, the opponent wins.
+- **Concurrency Control:** Redis distributed locks with a bounded wait around every game mutation.
+- **Fault Tolerance:** configurable disconnect grace period (`DISCONNECT_TIMEOUT_SECONDS`). If a player drops, the game waits; if they do not return in time, the opponent wins (a larger game is abandoned).
 - **Dockerized:** Ready for production deployment.
 
 ## 🛠️ Tech Stack
 
 - **Backend Framework:** FastAPI (Python 3.12+)
 - **Real-Time Communication:** WebSockets
-- **In-Memory Database & Pub/Sub:** Redis (asyncio)
+- **State Store:** Redis (asyncio), game state serialised with a TTL
 - **Data Validation:** Pydantic V2
 - **Testing:** Pytest & Pytest-Asyncio
 - **Containerization:** Docker
@@ -123,14 +123,34 @@ curl -H "X-Admin-Token: change-me" http://localhost:8000/admin/stats
 ```
 
 🐳 Docker Deployment
+The image is built from a filtered context (`.dockerignore`): no `front/`, no
+`node_modules`, no tests, no `.git`. It runs as an unprivileged user (`appuser`,
+uid 10001) and ships a `HEALTHCHECK` that probes `/`.
+
 Build the Docker image:
-code
-Bash
+
+```bash
 docker build -t uno-game-server .
-Run the container (Ensure a Redis container is also running and accessible):
-code
-Bash
-docker run -d -p 8000:8000 uno-game-server
+```
+
+Run the container (ensure a Redis container is also running and accessible):
+
+```bash
+docker run -d -p 8000:8000 -e REDIS_URL=redis://<redis-host>:6379/0 uno-game-server
+```
+
+Or bring up both services (Redis waits for its healthcheck, the backend then
+starts and exposes its own health status):
+
+```bash
+docker compose up --build
+```
+
+### Scaling note
+Room and queue connection registries live in the process memory, so the app must
+run with a **single uvicorn worker** (or sticky routing per game). Redis holds the
+authoritative game state, but live WebSocket fan-out is local to the process. The
+`/admin/stats` counters are labelled `process:<pid>` for that reason.
 Developed with ❤️ focusing on Clean Code and Scalability.
 code
 Code
