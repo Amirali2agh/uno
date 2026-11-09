@@ -59,11 +59,17 @@ Bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 The server will be available at http://localhost:8000.
 3. Running Tests
-The project includes a comprehensive test suite. To run the tests:
-code
-Bash
+The project includes a test suite. Install the dev dependencies once, then run it
+against a reachable Redis server:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest -v
-3. Running the Frontend (development)
+```
+
+Tests use a separate Redis database (default `15`, override with `TEST_REDIS_URL`)
+and are flushed around every test, so they never interfere with a running server.
+4. Running the Frontend (development)
 The React client lives in `front/`. Start the Vite dev server in a second terminal:
 
 ```bash
