@@ -11,6 +11,12 @@ from app.utils.redis_keys import get_game_state_key, get_game_lock_key
 
 VALID_COLORS = ('red', 'blue', 'green', 'yellow')
 
+# Game state must not live in Redis forever: an active game is dropped after an
+# hour without a write, a finished one is kept only long enough for the clients to
+# read the result.
+GAME_ACTIVE_TTL_SECONDS = 3600
+GAME_FINISHED_TTL_SECONDS = 120
+
 # Reason codes are part of the wire protocol: the client maps them to text, so
 # they must stay stable.
 REASON_MESSAGES = {
@@ -257,9 +263,24 @@ class GameService:
         data = await self.redis.get(get_game_state_key(game_id))
         return GameState.model_validate_json(data) if data else None
 
+    def _state_ttl(self, game_state: GameState) -> int:
+        return (
+            GAME_FINISHED_TTL_SECONDS
+            if game_state.status == "finished"
+            else GAME_ACTIVE_TTL_SECONDS
+        )
+
     async def save_game_state(self, game_state: GameState) -> None:
-        """ذخیره وضعیت بازی در ردیس"""
-        await self.redis.set(get_game_state_key(game_state.game_id), game_state.model_dump_json())
+        """ذخیره وضعیت بازی در ردیس همراه با انقضا"""
+        await self.redis.set(
+            get_game_state_key(game_state.game_id),
+            game_state.model_dump_json(),
+            ex=self._state_ttl(game_state),
+        )
+
+    async def delete_game_state(self, game_id: str) -> None:
+        """حذف فوری وضعیت بازی (پایان بازی یا لغو مسابقه)"""
+        await self.redis.delete(get_game_state_key(game_id))
 
     def _next_turn(self, state: GameState, steps: int = 1) -> None:
         """محاسبه نوبت نفر بعدی"""
