@@ -101,6 +101,18 @@ Pass the turn after drawing: {"action": "pass_turn"}
 Announce UNO: {"action": "say_uno"}
 Challenge a missed UNO: {"action": "challenge_uno"}
 Play and announce UNO together: {"action": "play_card", "card_index": 0, "say_uno": true}
+
+Every rejected action answers with a structured error and the socket stays open:
+
+```json
+{"type": "error", "code": "not_your_turn", "message": "It is not your turn."}
+```
+
+Reason codes: `invalid_json`, `invalid_message`, `invalid_action`, `message_too_large`,
+`internal_error`, `game_not_found`, `game_finished`, `not_your_turn`, `card_not_in_hand`,
+`must_play_drawn_card`, `invalid_card`, `color_required`, `invalid_color`,
+`wild4_has_matching_color`, `already_drawn`, `nothing_to_pass`, `cannot_call_uno`,
+`nothing_to_challenge`.
 🐳 Docker Deployment
 Build the Docker image:
 code

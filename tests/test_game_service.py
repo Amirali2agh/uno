@@ -20,7 +20,7 @@ async def test_draw_card_logic(game_service, start_game):
 
     success = await game_service.draw_card(game_id, "p1")
 
-    assert success is True
+    assert success.ok is True
 
 
 @pytest.mark.asyncio
@@ -34,7 +34,7 @@ async def test_play_card_logic(game_service, start_game):
 
     success = await game_service.play_card(game_id, "p1", 0)
 
-    assert success is True
+    assert success.ok is True
 
 
 @pytest.mark.asyncio

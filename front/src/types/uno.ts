@@ -58,6 +58,7 @@ export interface PlayerStatusMessage {
 
 export interface ErrorMessage {
   type: 'error'; // Error packet for illegal moves or out of turn actions
+  code: string; // Stable reason code (e.g. "not_your_turn", "invalid_card")
   message: string; // System message to print/display to the active user
 }
 

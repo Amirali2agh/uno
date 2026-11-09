@@ -30,7 +30,7 @@ async def test_wild4_rejected_while_holding_active_color(game_service):
 
     played = await game_service.play_card(game_id, "p1", 1, "blue")
 
-    assert played is False
+    assert played.ok is False
     state = await game_service.get_game_state(game_id)
     assert len(state.players[0].hand) == 2
     assert state.discard_pile[-1].value == "5"
@@ -50,7 +50,7 @@ async def test_wild4_allowed_without_active_color(game_service):
 
     played = await game_service.play_card(game_id, "p1", 1, "green")
 
-    assert played is True
+    assert played.ok is True
     state = await game_service.get_game_state(game_id)
     assert state.active_color == "green"
     assert len(state.players[1].hand) == 11  # 7 dealt + 4 penalty
@@ -67,7 +67,7 @@ async def test_wild_is_always_legal(game_service):
         top_card=Card(color="red", value="5"),
     )
 
-    assert await game_service.play_card(game_id, "p1", 1, "yellow") is True
+    assert (await game_service.play_card(game_id, "p1", 1, "yellow")).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.active_color == "yellow"
@@ -84,7 +84,7 @@ async def test_draw2_as_last_card_still_penalises_next_player(game_service):
         top_card=Card(color="red", value="5"),
     )
 
-    assert await game_service.play_card(game_id, "p1", 0) is True
+    assert (await game_service.play_card(game_id, "p1", 0)).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.status == "finished"
@@ -103,7 +103,7 @@ async def test_wild4_as_last_card_still_penalises_next_player(game_service):
         top_card=Card(color="red", value="5"),
     )
 
-    assert await game_service.play_card(game_id, "p1", 0, "blue") is True
+    assert (await game_service.play_card(game_id, "p1", 0, "blue")).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.status == "finished"
@@ -123,7 +123,7 @@ async def test_skip_skips_the_next_player(game_service):
         top_card=Card(color="red", value="5"),
     )
 
-    assert await game_service.play_card(game_id, "p1", 0) is True
+    assert (await game_service.play_card(game_id, "p1", 0)).ok is True
 
     state = await game_service.get_game_state(game_id)
     # two players: skipping the opponent returns the turn to the player who skipped
@@ -144,7 +144,7 @@ async def test_reverse_in_four_player_game_flips_direction(game_service):
     state.players[0].hand = [Card(color="red", value="reverse"), Card(color="blue", value="3")]
     await game_service.save_game_state(state)
 
-    assert await game_service.play_card(game_id, "p1", 0) is True
+    assert (await game_service.play_card(game_id, "p1", 0)).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.direction == -1
@@ -227,12 +227,12 @@ async def test_drawing_a_playable_card_keeps_the_turn(game_service):
     state.draw_pile = [Card(color="red", value="7")]
     await game_service.save_game_state(state)
 
-    assert await game_service.draw_card(game_id, "p1") is True
+    assert (await game_service.draw_card(game_id, "p1")).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.current_turn_index == 0                    # still p1's turn
     assert state.drawn_card_index == 1                       # the newly drawn card
-    assert await game_service.play_card(game_id, "p1", 1) is True
+    assert (await game_service.play_card(game_id, "p1", 1)).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.drawn_card_index is None
@@ -251,7 +251,7 @@ async def test_drawing_an_unplayable_card_passes_the_turn(game_service):
     state.draw_pile = [Card(color="green", value="3")]
     await game_service.save_game_state(state)
 
-    assert await game_service.draw_card(game_id, "p1") is True
+    assert (await game_service.draw_card(game_id, "p1")).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.current_turn_index == 1
@@ -271,8 +271,8 @@ async def test_cannot_draw_twice_in_one_turn(game_service):
     state.draw_pile = [Card(color="red", value="7")]
     await game_service.save_game_state(state)
 
-    assert await game_service.draw_card(game_id, "p1") is True
-    assert await game_service.draw_card(game_id, "p1") is False
+    assert (await game_service.draw_card(game_id, "p1")).ok is True
+    assert (await game_service.draw_card(game_id, "p1")).ok is False
 
 
 @pytest.mark.asyncio
@@ -287,11 +287,11 @@ async def test_cannot_play_another_card_after_drawing(game_service):
     state.draw_pile = [Card(color="red", value="7")]
     await game_service.save_game_state(state)
 
-    assert await game_service.draw_card(game_id, "p1") is True
+    assert (await game_service.draw_card(game_id, "p1")).ok is True
 
     # index 0 is a different (legal) card; only the drawn one (index 1) may be played
-    assert await game_service.play_card(game_id, "p1", 0) is False
-    assert await game_service.play_card(game_id, "p1", 1) is True
+    assert (await game_service.play_card(game_id, "p1", 0)).ok is False
+    assert (await game_service.play_card(game_id, "p1", 1)).ok is True
 
 
 @pytest.mark.asyncio
@@ -306,8 +306,8 @@ async def test_pass_turn_after_drawing(game_service):
     state.draw_pile = [Card(color="red", value="7")]
     await game_service.save_game_state(state)
 
-    assert await game_service.draw_card(game_id, "p1") is True
-    assert await game_service.pass_turn(game_id, "p1") is True
+    assert (await game_service.draw_card(game_id, "p1")).ok is True
+    assert (await game_service.pass_turn(game_id, "p1")).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.current_turn_index == 1
@@ -325,7 +325,7 @@ async def test_cannot_pass_without_drawing(game_service):
         top_card=Card(color="red", value="5"),
     )
 
-    assert await game_service.pass_turn(game_id, "p1") is False
+    assert (await game_service.pass_turn(game_id, "p1")).ok is False
 
 
 async def _two_card_state(game_service, game_id):
@@ -343,13 +343,13 @@ async def test_missing_uno_call_is_penalised(game_service):
     game_id = "uno-missed"
     await _two_card_state(game_service, game_id)
 
-    assert await game_service.play_card(game_id, "p1", 0) is True
+    assert (await game_service.play_card(game_id, "p1", 0)).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.uno_window == "p1"
     assert len(state.players[0].hand) == 1
 
-    assert await game_service.challenge_uno(game_id, "p2") == "p1"
+    assert (await game_service.challenge_uno(game_id, "p2")).player_id == "p1"
 
     state = await game_service.get_game_state(game_id)
     assert len(state.players[0].hand) == 3   # 1 + 2 penalty cards
@@ -361,14 +361,14 @@ async def test_uno_declared_with_the_play_is_safe(game_service):
     game_id = "uno-declared"
     await _two_card_state(game_service, game_id)
 
-    assert await game_service.play_card(game_id, "p1", 0, say_uno=True) is True
+    assert (await game_service.play_card(game_id, "p1", 0, say_uno=True)).ok is True
 
     state = await game_service.get_game_state(game_id)
     assert state.uno_window is None
     assert state.players[0].uno_declared is True
 
     # nothing to challenge any more
-    assert await game_service.challenge_uno(game_id, "p2") is None
+    assert (await game_service.challenge_uno(game_id, "p2")).ok is False
 
 
 @pytest.mark.asyncio
@@ -377,9 +377,9 @@ async def test_saying_uno_before_the_challenge(game_service):
     await _two_card_state(game_service, game_id)
     await game_service.play_card(game_id, "p1", 0)
 
-    assert await game_service.say_uno(game_id, "p1") is True
+    assert (await game_service.say_uno(game_id, "p1")).ok is True
     # declaring late keeps the window open, but a challenge now backfires
-    assert await game_service.challenge_uno(game_id, "p2") == "p2"
+    assert (await game_service.challenge_uno(game_id, "p2")).player_id == "p2"
 
     state = await game_service.get_game_state(game_id)
     assert len(state.players[1].hand) == 9   # 7 + 2 penalty cards
@@ -396,7 +396,7 @@ async def test_cannot_say_uno_with_more_than_one_card(game_service):
         top_card=Card(color="red", value="5"),
     )
 
-    assert await game_service.say_uno(game_id, "p1") is False
+    assert (await game_service.say_uno(game_id, "p1")).ok is False
 
 
 @pytest.mark.asyncio
@@ -410,7 +410,7 @@ async def test_uno_window_closes_when_the_next_player_acts(game_service):
     assert (await game_service.get_game_state(game_id)).uno_window == "p1"
 
     # p2 draws: the chance to challenge is gone
-    assert await game_service.draw_card(game_id, "p2") is True
+    assert (await game_service.draw_card(game_id, "p2")).ok is True
     state = await game_service.get_game_state(game_id)
     assert state.uno_window is None
-    assert await game_service.challenge_uno(game_id, "p2") is None
+    assert (await game_service.challenge_uno(game_id, "p2")).ok is False
