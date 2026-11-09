@@ -17,6 +17,8 @@ class PlayerState(BaseModel):
     player_name: str = ""
     player_avatar: str = ""
     hand: List[Card] = []
+    # True once the player has announced UNO while holding one card.
+    uno_declared: bool = False
 
 class GameState(BaseModel):
     game_id: str
@@ -31,6 +33,9 @@ class GameState(BaseModel):
     # Set while the current player has drawn and may still play that card.
     # ``None`` means the player must play from hand or draw.
     drawn_card_index: Optional[int] = None
+    # Player who went down to one card and can still be challenged for not
+    # announcing UNO. Cleared as soon as the next player acts.
+    uno_window: Optional[str] = None
 
 # ==========================================
 # Game Service (منطق اصلی بازی)
@@ -170,6 +175,7 @@ class GameService:
             if current_player.player_id != player_id:
                 return False # نوبت این بازیکن نیست
 
+            state.uno_window = None
             drawn_cards = self._draw_cards_from_pile(state, 1)
 
             if not drawn_cards:
@@ -191,6 +197,50 @@ class GameService:
             await self.save_game_state(state)
             return True
 
+    async def say_uno(self, game_id: str, player_id: str) -> bool:
+        """اعلام «اونو» توسط بازیکنی که یک کارت دارد"""
+        lock_key = get_game_lock_key(game_id)
+        async with self.redis.lock(lock_key, timeout=5):
+            state = await self.get_game_state(game_id)
+            if not state or state.status != "active":
+                return False
+
+            player = next((p for p in state.players if p.player_id == player_id), None)
+            if player is None or len(player.hand) != 1:
+                return False
+
+            player.uno_declared = True
+            await self.save_game_state(state)
+            return True
+
+    async def challenge_uno(self, game_id: str, challenger_id: str) -> Optional[str]:
+        """اعتراض به بازیکنی که اونو اعلام نکرده است
+
+        برمی‌گرداند: شناسه بازیکنی که دو کارت جریمه گرفت، یا None در صورت رد اعتراض.
+        """
+        lock_key = get_game_lock_key(game_id)
+        async with self.redis.lock(lock_key, timeout=5):
+            state = await self.get_game_state(game_id)
+            if not state or state.status != "active":
+                return None
+
+            offender_id = state.uno_window
+            if offender_id is None or offender_id == challenger_id:
+                return None
+
+            offender = next((p for p in state.players if p.player_id == offender_id), None)
+            if offender is None or len(offender.hand) != 1:
+                return None
+
+            # A wrong challenge costs the challenger two cards.
+            penalised_player_id = challenger_id if offender.uno_declared else offender_id
+            penalised = next(p for p in state.players if p.player_id == penalised_player_id)
+            penalised.hand.extend(self._draw_cards_from_pile(state, 2))
+
+            state.uno_window = None
+            await self.save_game_state(state)
+            return penalised_player_id
+
     async def pass_turn(self, game_id: str, player_id: str) -> bool:
         """بازیکن پس از برداشتن کارت، از بازی کردن آن صرف‌نظر می‌کند"""
         lock_key = get_game_lock_key(game_id)
@@ -207,11 +257,19 @@ class GameService:
                 return False  # نوبت را فقط بعد از برداشتن کارت می‌توان رد کرد
 
             state.drawn_card_index = None
+            state.uno_window = None
             self._next_turn(state)
             await self.save_game_state(state)
             return True
 
-    async def play_card(self, game_id: str, player_id: str, card_index: int, chosen_color: Optional[str] = None) -> bool:
+    async def play_card(
+        self,
+        game_id: str,
+        player_id: str,
+        card_index: int,
+        chosen_color: Optional[str] = None,
+        say_uno: bool = False,
+    ) -> bool:
         """بازیکن یک کارت را بازی می‌کند"""
         lock_key = get_game_lock_key(game_id)
         async with self.redis.lock(lock_key, timeout=5):
@@ -244,6 +302,9 @@ class GameService:
             if card_to_play.value == 'wild4' and self._holds_active_color(current_player, card_index, state.active_color):
                 return False
                 
+            # Any action by the player on turn closes the previous UNO window.
+            state.uno_window = None
+
             # بازی کردن کارت
             current_player.hand.pop(card_index)
             state.drawn_card_index = None
@@ -254,6 +315,14 @@ class GameService:
             # Draw Four played as the last card still forces the next player to draw.
             steps = self._apply_card_effect(state, card_to_play)
             self._next_turn(state, steps)
+
+            # UNO announcement: going down to one card opens a challenge window
+            # unless the player announced it together with the play.
+            if len(current_player.hand) == 1:
+                current_player.uno_declared = bool(say_uno)
+                state.uno_window = None if current_player.uno_declared else player_id
+            elif current_player.hand:
+                current_player.uno_declared = False
 
             # بررسی برنده شدن
             if len(current_player.hand) == 0:

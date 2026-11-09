@@ -20,6 +20,8 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
   const [pendingCardIndex, setPendingCardIndex] = useState<number | null>(null);
   const [gameOver, setGameOver] = useState<{ reason: string } | null>(null);
+  // Set when the player intends to announce UNO together with the next play.
+  const [unoIntent, setUnoIntent] = useState(false);
 
   useEffect(() => {
     connectRoom(gameId, playerId, playerName, playerAvatar);
@@ -67,6 +69,20 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
   // play it or pass.
   const canPass = isMyTurn && gameState?.drawn_card_index != null;
 
+  const handleUnoButton = () => {
+    if (!myPlayerState) return;
+    if (myPlayerState.hand.length === 1) {
+      sendAction({ action: 'say_uno' });
+      setUnoIntent(false);
+    } else {
+      setUnoIntent((intent) => !intent);
+    }
+  };
+
+  const handleChallenge = () => {
+    sendAction({ action: 'challenge_uno' });
+  };
+
   const handlePlayCard = (index: number) => {
     if (!myPlayerState) return;
     const selectedCard = myPlayerState.hand[index];
@@ -76,13 +92,20 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       setPendingCardIndex(index);
       setShowColorPicker(true);
     } else {
-      sendAction({ action: 'play_card', card_index: index, chosen_color: null });
+      sendAction({ action: 'play_card', card_index: index, chosen_color: null, say_uno: unoIntent });
+      setUnoIntent(false);
     }
   };
 
   const handleColorSelect = (color: 'red' | 'blue' | 'green' | 'yellow') => {
     if (pendingCardIndex === null) return;
-    sendAction({ action: 'play_card', card_index: pendingCardIndex, chosen_color: color });
+    sendAction({
+      action: 'play_card',
+      card_index: pendingCardIndex,
+      chosen_color: color,
+      say_uno: unoIntent,
+    });
+    setUnoIntent(false);
     setShowColorPicker(false);
     setPendingCardIndex(null);
   };
@@ -125,7 +148,13 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       {/* Opponents */}
       <div className="relative flex justify-center items-center gap-6 h-16 shrink-0 overflow-visible mt-1 z-10">
         {sortedOpponents.map((opponent) => (
-          <OpponentSeat key={opponent.player_id} player={opponent} isCurrentTurn={gameState.players[gameState.current_turn_index]?.player_id === opponent.player_id} />
+          <OpponentSeat
+            key={opponent.player_id}
+            player={opponent}
+            isCurrentTurn={gameState.players[gameState.current_turn_index]?.player_id === opponent.player_id}
+            canChallenge={gameState.uno_window === opponent.player_id}
+            onChallenge={handleChallenge}
+          />
         ))}
       </div>
 
@@ -169,6 +198,20 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
             )}
           </div>
           <span className="text-xs font-semibold text-slate-200">{playerName || playerId}</span>
+          {isMyTurn && (myPlayerState?.hand.length ?? 99) <= 2 && (
+            <button
+              onClick={handleUnoButton}
+              aria-label="Announce UNO"
+              aria-pressed={myPlayerState?.hand.length === 1 ? undefined : unoIntent}
+              className={`ml-1 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider transition-all active:scale-95 ${
+                unoIntent || myPlayerState?.hand.length === 1
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-900/50 animate-pulse'
+                  : 'bg-slate-800 text-slate-300 border border-slate-600 hover:bg-slate-700'
+              }`}
+            >
+              UNO!
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col items-center mt-1">

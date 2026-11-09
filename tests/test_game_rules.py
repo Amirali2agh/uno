@@ -326,3 +326,91 @@ async def test_cannot_pass_without_drawing(game_service):
     )
 
     assert await game_service.pass_turn(game_id, "p1") is False
+
+
+async def _two_card_state(game_service, game_id):
+    """p1 holds two red cards; a play leaves them on one card."""
+    return await prepare_state(
+        game_service,
+        game_id,
+        hand=[Card(color="red", value="2"), Card(color="red", value="3")],
+        top_card=Card(color="red", value="5"),
+    )
+
+
+@pytest.mark.asyncio
+async def test_missing_uno_call_is_penalised(game_service):
+    game_id = "uno-missed"
+    await _two_card_state(game_service, game_id)
+
+    assert await game_service.play_card(game_id, "p1", 0) is True
+
+    state = await game_service.get_game_state(game_id)
+    assert state.uno_window == "p1"
+    assert len(state.players[0].hand) == 1
+
+    assert await game_service.challenge_uno(game_id, "p2") == "p1"
+
+    state = await game_service.get_game_state(game_id)
+    assert len(state.players[0].hand) == 3   # 1 + 2 penalty cards
+    assert state.uno_window is None
+
+
+@pytest.mark.asyncio
+async def test_uno_declared_with_the_play_is_safe(game_service):
+    game_id = "uno-declared"
+    await _two_card_state(game_service, game_id)
+
+    assert await game_service.play_card(game_id, "p1", 0, say_uno=True) is True
+
+    state = await game_service.get_game_state(game_id)
+    assert state.uno_window is None
+    assert state.players[0].uno_declared is True
+
+    # nothing to challenge any more
+    assert await game_service.challenge_uno(game_id, "p2") is None
+
+
+@pytest.mark.asyncio
+async def test_saying_uno_before_the_challenge(game_service):
+    game_id = "uno-late-call"
+    await _two_card_state(game_service, game_id)
+    await game_service.play_card(game_id, "p1", 0)
+
+    assert await game_service.say_uno(game_id, "p1") is True
+    # declaring late keeps the window open, but a challenge now backfires
+    assert await game_service.challenge_uno(game_id, "p2") == "p2"
+
+    state = await game_service.get_game_state(game_id)
+    assert len(state.players[1].hand) == 9   # 7 + 2 penalty cards
+    assert len(state.players[0].hand) == 1
+
+
+@pytest.mark.asyncio
+async def test_cannot_say_uno_with_more_than_one_card(game_service):
+    game_id = "uno-too-early"
+    await prepare_state(
+        game_service,
+        game_id,
+        hand=[Card(color="red", value="2"), Card(color="red", value="3")],
+        top_card=Card(color="red", value="5"),
+    )
+
+    assert await game_service.say_uno(game_id, "p1") is False
+
+
+@pytest.mark.asyncio
+async def test_uno_window_closes_when_the_next_player_acts(game_service):
+    game_id = "uno-window-closes"
+    state = await _two_card_state(game_service, game_id)
+    state.draw_pile = [Card(color="green", value="9")]
+    await game_service.save_game_state(state)
+
+    await game_service.play_card(game_id, "p1", 0)
+    assert (await game_service.get_game_state(game_id)).uno_window == "p1"
+
+    # p2 draws: the chance to challenge is gone
+    assert await game_service.draw_card(game_id, "p2") is True
+    state = await game_service.get_game_state(game_id)
+    assert state.uno_window is None
+    assert await game_service.challenge_uno(game_id, "p2") is None

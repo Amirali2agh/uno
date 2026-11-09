@@ -79,6 +79,28 @@ async def room_websocket(
                 else:
                     await websocket.send_json({"type": "error", "message": "Cannot draw card (not your turn)"})
 
+            elif action == "say_uno":
+                if await game_service.say_uno(game_id, player_id):
+                    new_state = await game_service.get_game_state(game_id)
+                    await room_manager.broadcast(game_id, {
+                        "type": "state_update",
+                        "state": new_state.model_dump()
+                    })
+                else:
+                    await websocket.send_json({"type": "error", "message": "Cannot call UNO right now"})
+
+            elif action == "challenge_uno":
+                penalised = await game_service.challenge_uno(game_id, player_id)
+                if penalised:
+                    new_state = await game_service.get_game_state(game_id)
+                    await room_manager.broadcast(game_id, {
+                        "type": "state_update",
+                        "state": new_state.model_dump(),
+                        "notice": {"type": "uno_penalty", "player_id": penalised},
+                    })
+                else:
+                    await websocket.send_json({"type": "error", "message": "Nothing to challenge"})
+
             elif action == "pass_turn":
                 # Player drew a playable card and declines to play it
                 success = await game_service.pass_turn(game_id, player_id)
@@ -95,12 +117,15 @@ async def room_websocket(
                 # Handle card playing
                 card_index = message.get("card_index")
                 chosen_color = message.get("chosen_color") # Required only for Wild cards
+                say_uno = bool(message.get("say_uno", False))
                 
                 if card_index is None:
                     await websocket.send_json({"type": "error", "message": "Missing card_index"})
                     continue
                     
-                success = await game_service.play_card(game_id, player_id, card_index, chosen_color)
+                success = await game_service.play_card(
+                    game_id, player_id, card_index, chosen_color, say_uno
+                )
                 if success:
                     # Fetch updated state and broadcast to everyone
                     new_state = await game_service.get_game_state(game_id)
