@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     
     # Game rules
     DISCONNECT_TIMEOUT_SECONDS: int = 60
+
+    # Shared secret for the /admin surface. The endpoints stay disabled until it
+    # is set, so an unconfigured deployment never exposes them by accident.
+    ADMIN_TOKEN: str = ""
     
     # Modern Pydantic configuration settings
     model_config = SettingsConfigDict(env_file=".env")

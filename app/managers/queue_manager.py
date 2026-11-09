@@ -1,7 +1,10 @@
+import os
 from fastapi import WebSocket
 
 class QueueManager:
     def __init__(self):
+        # Identifies this worker in admin stats (counters are per process).
+        self.process_id = os.getpid()
         self.active_connections: dict[str, WebSocket] = {}
 
     async def connect(self, player_id: str, websocket: WebSocket):
