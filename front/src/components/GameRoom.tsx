@@ -19,35 +19,69 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
   const [errorLog, setErrorLog] = useState<string | null>(null);
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
   const [pendingCardIndex, setPendingCardIndex] = useState<number | null>(null);
-  const [gameOver, setGameOver] = useState<{ reason: string } | null>(null);
   // Set when the player intends to announce UNO together with the next play.
   const [unoIntent, setUnoIntent] = useState(false);
 
   useEffect(() => {
     connectRoom(gameId, playerId, playerName, playerAvatar);
     const unsubscribeState = subscribe('state_update', (newState) => {
+      // The game-over screen is derived from the state itself (status/winner/
+      // end_reason), so it shows up for both the play win and the disconnect path.
       setGameState(newState);
       setErrorLog(null);
-      // If state says finished but no game_over event came, still show the overlay
-      if (newState.status === 'finished' && !gameOver) {
-        setGameOver({ reason: newState.winner ? `${newState.winner} won!` : 'Game finished' });
-      }
     });
     const unsubscribeError = subscribe('error', (message) => {
       setErrorLog(message);
       setTimeout(() => setErrorLog(null), 3000);
     });
-    const unsubscribeGameOver = subscribe('game_over', (payload) => {
-      setGameOver({ reason: payload.reason });
-    });
     return () => {
       unsubscribeState();
       unsubscribeError();
-      unsubscribeGameOver();
     };
-  }, [gameId, playerId, connectRoom, subscribe]);
+  }, [gameId, playerId, playerName, playerAvatar, connectRoom, subscribe]);
 
   const myPlayerState = useMemo(() => gameState?.players.find((p) => p.player_id === playerId) || null, [gameState, playerId]);
+
+  /** Human readable outcome of a finished match, derived from the state. */
+  const matchResult = useMemo(() => {
+    if (!gameState || gameState.status !== 'finished') return null;
+
+    const nameOf = (id: string | null): string | null => {
+      if (!id) return null;
+      const player = gameState.players.find((p) => p.player_id === id);
+      if (!player) return null;
+      return player.player_name || player.player_id;
+    };
+
+    const winnerName = nameOf(gameState.winner);
+    const disconnectedName = nameOf(gameState.disconnected_player_id);
+
+    if (gameState.end_reason === 'disconnect_timeout') {
+      const iAmOut = gameState.disconnected_player_id === playerId;
+      return {
+        emoji: iAmOut ? '🔌' : '🏆',
+        title: iAmOut ? 'You were disconnected' : winnerName ? 'You win by disconnect' : 'Game abandoned',
+        detail: iAmOut
+          ? 'You did not reconnect in time, so the match was ended.'
+          : disconnectedName
+            ? `${disconnectedName} did not reconnect in time.${winnerName ? ` ${winnerName} takes the win.` : ''}`
+            : 'A player left the table.',
+        isWin: winnerName === playerName || gameState.winner === playerId,
+      };
+    }
+
+    if (!winnerName) {
+      return { emoji: '🃏', title: 'Game over', detail: 'The match has ended.', isWin: null };
+    }
+
+    const iWon = gameState.winner === playerId;
+    return {
+      emoji: iWon ? '🏆' : '🎴',
+      title: iWon ? 'You win!' : `${winnerName} wins`,
+      detail: iWon ? 'You played your last card first.' : `${winnerName} played their last card first.`,
+      isWin: iWon,
+    };
+  }, [gameState, playerId, playerName]);
 
   const sortedOpponents = useMemo(() => {
     if (!gameState) return [];
@@ -372,12 +406,12 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       </div>
 
       {/* Game Over Overlay */}
-      {gameOver && (
+      {matchResult && (
         <div className="absolute inset-0 z-40 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-8">
           <div className="bg-slate-900 border border-slate-700/50 p-8 rounded-3xl max-w-xs w-full text-center shadow-2xl">
-            <div className="text-5xl mb-4">🏆</div>
-            <h2 className="text-xl font-black text-white mb-2">Game Over</h2>
-            <p className="text-sm text-slate-400 mb-6">{gameOver.reason}</p>
+            <div className="text-5xl mb-4">{matchResult.emoji}</div>
+            <h2 className="text-xl font-black text-white mb-2">{matchResult.title}</h2>
+            <p className="text-sm text-slate-400 mb-6">{matchResult.detail}</p>
             <button
               onClick={onExit}
               className="w-full py-3 rounded-xl bg-orange-600 text-white font-bold text-sm hover:bg-orange-500 transition-all active:scale-95 shadow-lg"
