@@ -5,6 +5,51 @@ from redis.asyncio import Redis
 from app.utils.redis_keys import get_game_state_key, get_game_lock_key
 
 # ==========================================
+# Action results (نتیجهٔ عملیات بازیکن)
+# ==========================================
+
+VALID_COLORS = ('red', 'blue', 'green', 'yellow')
+
+# Reason codes are part of the wire protocol: the client maps them to text, so
+# they must stay stable.
+REASON_MESSAGES = {
+    "game_not_found": "That game does not exist any more.",
+    "game_finished": "This game is already over.",
+    "not_your_turn": "It is not your turn.",
+    "card_not_in_hand": "You do not hold that card.",
+    "must_play_drawn_card": "After drawing you may only play the drawn card.",
+    "invalid_card": "That card does not match the colour or the value on the table.",
+    "color_required": "A wild card needs a colour to be chosen.",
+    "invalid_color": "That is not a valid UNO colour.",
+    "wild4_has_matching_color": "A Wild Draw Four needs a hand with no card of the active colour.",
+    "already_drawn": "You already drew a card this turn.",
+    "nothing_to_pass": "There is no drawn card to pass on.",
+    "cannot_call_uno": "You can only call UNO while holding exactly one card.",
+    "nothing_to_challenge": "There is no UNO call to challenge.",
+    "no_cards_left": "Both piles are empty.",
+    "queue_full": "The matchmaking queue is busy.",
+}
+
+
+class ActionResult(BaseModel):
+    """نتیجهٔ یک اقدام بازیکن، همراه با کد دلیل برای کلاینت"""
+
+    ok: bool
+    code: str = "ok"
+    message: str = ""
+    # Set by challenge_uno: the player who took the penalty.
+    player_id: Optional[str] = None
+
+
+def success(**extra) -> ActionResult:
+    return ActionResult(ok=True, **extra)
+
+
+def failure(code: str) -> ActionResult:
+    return ActionResult(ok=False, code=code, message=REASON_MESSAGES.get(code, code))
+
+
+# ==========================================
 # Models (ساختار داده‌های بازی)
 # ==========================================
 
@@ -216,22 +261,32 @@ class GameService:
             drawn.append(state.draw_pile.pop())
         return drawn
 
-    async def draw_card(self, game_id: str, player_id: str) -> bool:
+    def _check_turn(self, state: Optional[GameState], player_id: str) -> Optional[ActionResult]:
+        """بررسی‌های مشترک: وجود بازی، فعال بودن و نوبت بازیکن"""
+        if state is None:
+            return failure("game_not_found")
+        if state.status != "active":
+            return failure("game_finished")
+        if not state.players:
+            return failure("game_not_found")
+        if state.players[state.current_turn_index].player_id != player_id:
+            return failure("not_your_turn")
+        return None
+
+    async def draw_card(self, game_id: str, player_id: str) -> ActionResult:
         """بازیکن یک کارت از زمین برمی‌دارد (اگر کارت قابل بازی باشد نوبتش می‌ماند)"""
         lock_key = get_game_lock_key(game_id)
         async with self.redis.lock(lock_key, timeout=5):
             state = await self.get_game_state(game_id)
-            if not state or state.status != "active":
-                return False
+            error = self._check_turn(state, player_id)
+            if error is not None:
+                return error
 
             # Only one draw per turn: the player is deciding whether to play it.
             if state.drawn_card_index is not None:
-                return False
+                return failure("already_drawn")
 
             current_player = state.players[state.current_turn_index]
-            if current_player.player_id != player_id:
-                return False # نوبت این بازیکن نیست
-
             state.uno_window = None
             drawn_cards = self._draw_cards_from_pile(state, 1)
 
@@ -239,7 +294,7 @@ class GameService:
                 # Nothing left in either pile: the turn simply passes.
                 self._next_turn(state)
                 await self.save_game_state(state)
-                return True
+                return success()
 
             current_player.hand.extend(drawn_cards)
             drawn_index = len(current_player.hand) - 1
@@ -252,42 +307,48 @@ class GameService:
                 self._next_turn(state)
 
             await self.save_game_state(state)
-            return True
+            return success()
 
-    async def say_uno(self, game_id: str, player_id: str) -> bool:
+    async def say_uno(self, game_id: str, player_id: str) -> ActionResult:
         """اعلام «اونو» توسط بازیکنی که یک کارت دارد"""
         lock_key = get_game_lock_key(game_id)
         async with self.redis.lock(lock_key, timeout=5):
             state = await self.get_game_state(game_id)
-            if not state or state.status != "active":
-                return False
+            if not state:
+                return failure("game_not_found")
+            if state.status != "active":
+                return failure("game_finished")
 
             player = next((p for p in state.players if p.player_id == player_id), None)
-            if player is None or len(player.hand) != 1:
-                return False
+            if player is None:
+                return failure("not_your_turn")
+            if len(player.hand) != 1:
+                return failure("cannot_call_uno")
 
             player.uno_declared = True
             await self.save_game_state(state)
-            return True
+            return success()
 
-    async def challenge_uno(self, game_id: str, challenger_id: str) -> Optional[str]:
+    async def challenge_uno(self, game_id: str, challenger_id: str) -> ActionResult:
         """اعتراض به بازیکنی که اونو اعلام نکرده است
 
-        برمی‌گرداند: شناسه بازیکنی که دو کارت جریمه گرفت، یا None در صورت رد اعتراض.
+        در صورت موفقیت، ``player_id`` نتیجه، بازیکنی است که دو کارت جریمه گرفت.
         """
         lock_key = get_game_lock_key(game_id)
         async with self.redis.lock(lock_key, timeout=5):
             state = await self.get_game_state(game_id)
-            if not state or state.status != "active":
-                return None
+            if not state:
+                return failure("game_not_found")
+            if state.status != "active":
+                return failure("game_finished")
 
             offender_id = state.uno_window
             if offender_id is None or offender_id == challenger_id:
-                return None
+                return failure("nothing_to_challenge")
 
             offender = next((p for p in state.players if p.player_id == offender_id), None)
             if offender is None or len(offender.hand) != 1:
-                return None
+                return failure("nothing_to_challenge")
 
             # A wrong challenge costs the challenger two cards.
             penalised_player_id = challenger_id if offender.uno_declared else offender_id
@@ -296,28 +357,25 @@ class GameService:
 
             state.uno_window = None
             await self.save_game_state(state)
-            return penalised_player_id
+            return success(player_id=penalised_player_id)
 
-    async def pass_turn(self, game_id: str, player_id: str) -> bool:
+    async def pass_turn(self, game_id: str, player_id: str) -> ActionResult:
         """بازیکن پس از برداشتن کارت، از بازی کردن آن صرف‌نظر می‌کند"""
         lock_key = get_game_lock_key(game_id)
         async with self.redis.lock(lock_key, timeout=5):
             state = await self.get_game_state(game_id)
-            if not state or state.status != "active":
-                return False
-
-            current_player = state.players[state.current_turn_index]
-            if current_player.player_id != player_id:
-                return False
+            error = self._check_turn(state, player_id)
+            if error is not None:
+                return error
 
             if state.drawn_card_index is None:
-                return False  # نوبت را فقط بعد از برداشتن کارت می‌توان رد کرد
+                return failure("nothing_to_pass")  # نوبت را فقط بعد از برداشتن کارت می‌توان رد کرد
 
             state.drawn_card_index = None
             state.uno_window = None
             self._next_turn(state)
             await self.save_game_state(state)
-            return True
+            return success()
 
     async def play_card(
         self,
@@ -326,38 +384,40 @@ class GameService:
         card_index: int,
         chosen_color: Optional[str] = None,
         say_uno: bool = False,
-    ) -> bool:
+    ) -> ActionResult:
         """بازیکن یک کارت را بازی می‌کند"""
         lock_key = get_game_lock_key(game_id)
         async with self.redis.lock(lock_key, timeout=5):
             state = await self.get_game_state(game_id)
-            if not state or state.status != "active":
-                return False
-                
+            error = self._check_turn(state, player_id)
+            if error is not None:
+                return error
+
             current_player = state.players[state.current_turn_index]
-            if current_player.player_id != player_id:
-                return False # نوبت این بازیکن نیست
-                
+
             if card_index < 0 or card_index >= len(current_player.hand):
-                return False
-                
+                return failure("card_not_in_hand")
+
             card_to_play = current_player.hand[card_index]
 
             # After drawing, only the drawn card may be played.
             if state.drawn_card_index is not None and card_index != state.drawn_card_index:
-                return False
+                return failure("must_play_drawn_card")
 
             # بررسی اینکه آیا کارت مجاز است یا خیر
             if not self._card_matches(state, card_to_play):
-                return False
+                return failure("invalid_card")
 
-            if card_to_play.color == 'black' and not chosen_color:
-                return False # برای کارت مشکی باید رنگ انتخاب شود
+            if card_to_play.color == 'black':
+                if not chosen_color:
+                    return failure("color_required")
+                if chosen_color not in VALID_COLORS:
+                    return failure("invalid_color")
 
             # Wild Draw Four is only legal when the player holds no card that
             # matches the active colour (the card being played excluded).
             if card_to_play.value == 'wild4' and self._holds_active_color(current_player, card_index, state.active_color):
-                return False
+                return failure("wild4_has_matching_color")
                 
             # Any action by the player on turn closes the previous UNO window.
             state.uno_window = None
@@ -387,7 +447,7 @@ class GameService:
                 state.winner = player_id
 
             await self.save_game_state(state)
-            return True
+            return success(winner=player_id) if state.status == "finished" else success()
 
     def _apply_card_effect(self, state: GameState, card: Card) -> int:
         """اعمال اثر کارت بازی‌شده و برگرداندن تعداد گام تا نوبت بعدی"""
