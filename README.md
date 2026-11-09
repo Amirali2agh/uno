@@ -96,6 +96,7 @@ Behavior: Connects the player to the active game.
 Actions (Client -> Server):
 Draw a card: {"action": "draw_card"}
 Play a card: {"action": "play_card", "card_index": 1, "chosen_color": "red"}
+Pass the turn after drawing: {"action": "pass_turn"}
 🐳 Docker Deployment
 Build the Docker image:
 code

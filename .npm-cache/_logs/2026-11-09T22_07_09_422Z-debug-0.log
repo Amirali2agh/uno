@@ -1,0 +1,492 @@
+0 verbose cli /usr/bin/node /usr/bin/npm
+1 info using npm@10.9.9
+2 info using node@v22.23.4
+3 silly config load:file:/usr/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/dev/meshcat_ERP/.scratch-uno/front/.npmrc
+5 silly config load:file:/home/dev/.npmrc
+6 silly config load:file:/usr/etc/npmrc
+7 verbose title npm ci
+8 verbose argv "ci" "--cache" "/home/dev/meshcat_ERP/.scratch-uno/.npm-cache" "--no-audit" "--no-fund"
+9 verbose logfile logs-max:10 dir:/home/dev/meshcat_ERP/.scratch-uno/.npm-cache/_logs/2026-11-09T22_07_09_422Z-
+10 verbose logfile /home/dev/meshcat_ERP/.scratch-uno/.npm-cache/_logs/2026-11-09T22_07_09_422Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+13 silly idealTree buildDeps
+14 silly reify moves {}
+15 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-wasm32-wasi
+16 silly reify mark deleted [
+16 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-wasm32-wasi'
+16 silly reify ]
+17 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-win32-x64-msvc
+18 silly reify mark deleted [
+18 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-win32-x64-msvc'
+18 silly reify ]
+19 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-win32-arm64-msvc
+20 silly reify mark deleted [
+20 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-win32-arm64-msvc'
+20 silly reify ]
+21 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-linux-x64-musl
+22 silly reify mark deleted [
+22 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-linux-x64-musl'
+22 silly reify ]
+23 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-linux-arm64-musl
+24 silly reify mark deleted [
+24 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-linux-arm64-musl'
+24 silly reify ]
+25 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-linux-arm64-gnu
+26 silly reify mark deleted [
+26 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-linux-arm64-gnu'
+26 silly reify ]
+27 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-linux-arm-gnueabihf
+28 silly reify mark deleted [
+28 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-linux-arm-gnueabihf'
+28 silly reify ]
+29 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-freebsd-x64
+30 silly reify mark deleted [
+30 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-freebsd-x64'
+30 silly reify ]
+31 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-darwin-x64
+32 silly reify mark deleted [
+32 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-darwin-x64'
+32 silly reify ]
+33 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-darwin-arm64
+34 silly reify mark deleted [
+34 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-darwin-arm64'
+34 silly reify ]
+35 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-android-arm64
+36 silly reify mark deleted [
+36 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/lightningcss-android-arm64'
+36 silly reify ]
+37 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/fsevents
+38 silly reify mark deleted [ '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/fsevents' ]
+39 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-win32-x64
+40 silly reify mark deleted [
+40 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-win32-x64'
+40 silly reify ]
+41 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-win32-arm64
+42 silly reify mark deleted [
+42 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-win32-arm64'
+42 silly reify ]
+43 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-sunos-x64
+44 silly reify mark deleted [
+44 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-sunos-x64'
+44 silly reify ]
+45 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-openbsd-x64
+46 silly reify mark deleted [
+46 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-openbsd-x64'
+46 silly reify ]
+47 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-openbsd-arm64
+48 silly reify mark deleted [
+48 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-openbsd-arm64'
+48 silly reify ]
+49 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-netbsd-x64
+50 silly reify mark deleted [
+50 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-netbsd-x64'
+50 silly reify ]
+51 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-netbsd-arm64
+52 silly reify mark deleted [
+52 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-netbsd-arm64'
+52 silly reify ]
+53 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-s390x
+54 silly reify mark deleted [
+54 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-s390x'
+54 silly reify ]
+55 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-riscv64
+56 silly reify mark deleted [
+56 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-riscv64'
+56 silly reify ]
+57 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-ppc64
+58 silly reify mark deleted [
+58 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-ppc64'
+58 silly reify ]
+59 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-mips64el
+60 silly reify mark deleted [
+60 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-mips64el'
+60 silly reify ]
+61 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-loong64
+62 silly reify mark deleted [
+62 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-loong64'
+62 silly reify ]
+63 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-arm64
+64 silly reify mark deleted [
+64 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-arm64'
+64 silly reify ]
+65 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-arm
+66 silly reify mark deleted [
+66 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-linux-arm'
+66 silly reify ]
+67 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-freebsd-x64
+68 silly reify mark deleted [
+68 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-freebsd-x64'
+68 silly reify ]
+69 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-freebsd-arm64
+70 silly reify mark deleted [
+70 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-freebsd-arm64'
+70 silly reify ]
+71 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-darwin-x64
+72 silly reify mark deleted [
+72 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-darwin-x64'
+72 silly reify ]
+73 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-darwin-arm64
+74 silly reify mark deleted [
+74 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-darwin-arm64'
+74 silly reify ]
+75 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-aix-ppc64
+76 silly reify mark deleted [
+76 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@typescript/typescript-aix-ppc64'
+76 silly reify ]
+77 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-win32-x64-msvc
+78 silly reify mark deleted [
+78 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-win32-x64-msvc'
+78 silly reify ]
+79 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-win32-arm64-msvc
+80 silly reify mark deleted [
+80 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-win32-arm64-msvc'
+80 silly reify ]
+81 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-linux-x64-musl
+82 silly reify mark deleted [
+82 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-linux-x64-musl'
+82 silly reify ]
+83 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-linux-arm64-musl
+84 silly reify mark deleted [
+84 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-linux-arm64-musl'
+84 silly reify ]
+85 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-linux-arm64-gnu
+86 silly reify mark deleted [
+86 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-linux-arm64-gnu'
+86 silly reify ]
+87 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-linux-arm-gnueabihf
+88 silly reify mark deleted [
+88 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-linux-arm-gnueabihf'
+88 silly reify ]
+89 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-freebsd-x64
+90 silly reify mark deleted [
+90 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-freebsd-x64'
+90 silly reify ]
+91 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-darwin-x64
+92 silly reify mark deleted [
+92 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-darwin-x64'
+92 silly reify ]
+93 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-darwin-arm64
+94 silly reify mark deleted [
+94 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-darwin-arm64'
+94 silly reify ]
+95 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-android-arm64
+96 silly reify mark deleted [
+96 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@tailwindcss/oxide-android-arm64'
+96 silly reify ]
+97 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-win32-x64-msvc
+98 silly reify mark deleted [
+98 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-win32-x64-msvc'
+98 silly reify ]
+99 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-win32-arm64-msvc
+100 silly reify mark deleted [
+100 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-win32-arm64-msvc'
+100 silly reify ]
+101 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-wasm32-wasi
+102 silly reify mark deleted [
+102 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-wasm32-wasi'
+102 silly reify ]
+103 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-openharmony-arm64
+104 silly reify mark deleted [
+104 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-openharmony-arm64'
+104 silly reify ]
+105 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-x64-musl
+106 silly reify mark deleted [
+106 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-x64-musl'
+106 silly reify ]
+107 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-s390x-gnu
+108 silly reify mark deleted [
+108 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-s390x-gnu'
+108 silly reify ]
+109 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-ppc64-gnu
+110 silly reify mark deleted [
+110 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-ppc64-gnu'
+110 silly reify ]
+111 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-arm64-musl
+112 silly reify mark deleted [
+112 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-arm64-musl'
+112 silly reify ]
+113 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-arm64-gnu
+114 silly reify mark deleted [
+114 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-arm64-gnu'
+114 silly reify ]
+115 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-arm-gnueabihf
+116 silly reify mark deleted [
+116 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-linux-arm-gnueabihf'
+116 silly reify ]
+117 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-freebsd-x64
+118 silly reify mark deleted [
+118 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-freebsd-x64'
+118 silly reify ]
+119 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-darwin-x64
+120 silly reify mark deleted [
+120 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-darwin-x64'
+120 silly reify ]
+121 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-darwin-arm64
+122 silly reify mark deleted [
+122 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-darwin-arm64'
+122 silly reify ]
+123 verbose reify failed optional dependency /home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-android-arm64
+124 silly reify mark deleted [
+124 silly reify   '/home/dev/meshcat_ERP/.scratch-uno/front/node_modules/@rolldown/binding-android-arm64'
+124 silly reify ]
+125 http fetch GET 200 https://registry.npmjs.org/npm 139ms
+126 http cache vite@https://registry.npmjs.org/vite/-/vite-8.1.4.tgz 0ms (cache hit)
+127 http cache typescript@https://registry.npmjs.org/typescript/-/typescript-7.0.2.tgz 0ms (cache hit)
+128 http cache tslib@https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz 0ms (cache hit)
+129 http cache tinyglobby@https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz 0ms (cache hit)
+130 http cache tapable@https://registry.npmjs.org/tapable/-/tapable-2.3.3.tgz 0ms (cache hit)
+131 http cache source-map-js@https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz 0ms (cache hit)
+132 http cache tailwindcss@https://registry.npmjs.org/tailwindcss/-/tailwindcss-4.3.2.tgz 0ms (cache hit)
+133 http cache scheduler@https://registry.npmjs.org/scheduler/-/scheduler-0.27.0.tgz 0ms (cache hit)
+134 http cache rolldown@https://registry.npmjs.org/rolldown/-/rolldown-1.1.5.tgz 0ms (cache hit)
+135 http cache react-dom@https://registry.npmjs.org/react-dom/-/react-dom-19.2.7.tgz 0ms (cache hit)
+136 http cache postcss@https://registry.npmjs.org/postcss/-/postcss-8.5.19.tgz 0ms (cache hit)
+137 http cache react@https://registry.npmjs.org/react/-/react-19.2.7.tgz 0ms (cache hit)
+138 http cache picomatch@https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz 0ms (cache hit)
+139 http cache picocolors@https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz 0ms (cache hit)
+140 http cache nanoid@https://registry.npmjs.org/nanoid/-/nanoid-3.3.16.tgz 0ms (cache hit)
+141 http cache motion-utils@https://registry.npmjs.org/motion-utils/-/motion-utils-12.39.0.tgz 0ms (cache hit)
+142 http cache motion-dom@https://registry.npmjs.org/motion-dom/-/motion-dom-12.42.2.tgz 0ms (cache hit)
+143 http cache magic-string@https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz 0ms (cache hit)
+144 http cache lightningcss-linux-x64-gnu@https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.32.0.tgz 0ms (cache hit)
+145 http cache jiti@https://registry.npmjs.org/jiti/-/jiti-2.7.0.tgz 0ms (cache hit)
+146 http cache lightningcss@https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz 0ms (cache hit)
+147 http cache graceful-fs@https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz 0ms (cache hit)
+148 http cache fdir@https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz 0ms (cache hit)
+149 http cache framer-motion@https://registry.npmjs.org/framer-motion/-/framer-motion-12.42.2.tgz 0ms (cache hit)
+150 http cache detect-libc@https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz 0ms (cache hit)
+151 http cache enhanced-resolve@https://registry.npmjs.org/enhanced-resolve/-/enhanced-resolve-5.21.6.tgz 0ms (cache hit)
+152 http cache csstype@https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz 0ms (cache hit)
+153 http cache @typescript/typescript-linux-x64@https://registry.npmjs.org/@typescript/typescript-linux-x64/-/typescript-linux-x64-7.0.2.tgz 0ms (cache hit)
+154 http cache @vitejs/plugin-react@https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-6.0.3.tgz 0ms (cache hit)
+155 http cache @types/react-dom@https://registry.npmjs.org/@types/react-dom/-/react-dom-19.2.3.tgz 0ms (cache hit)
+156 http cache @types/react@https://registry.npmjs.org/@types/react/-/react-19.2.17.tgz 0ms (cache hit)
+157 http cache @tybys/wasm-util@https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.3.tgz 0ms (cache hit)
+158 http cache @tailwindcss/vite@https://registry.npmjs.org/@tailwindcss/vite/-/vite-4.3.2.tgz 0ms (cache hit)
+159 http cache @tailwindcss/oxide-linux-x64-gnu@https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-gnu/-/oxide-linux-x64-gnu-4.3.2.tgz 0ms (cache hit)
+160 http cache @tailwindcss/oxide@https://registry.npmjs.org/@tailwindcss/oxide/-/oxide-4.3.2.tgz 0ms (cache hit)
+161 http cache @tailwindcss/node@https://registry.npmjs.org/@tailwindcss/node/-/node-4.3.2.tgz 0ms (cache hit)
+162 http cache @rolldown/pluginutils@https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.1.tgz 0ms (cache hit)
+163 http cache @rolldown/binding-linux-x64-gnu@https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.1.5.tgz 0ms (cache hit)
+164 http cache @napi-rs/wasm-runtime@https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.6.tgz 0ms (cache hit)
+165 http cache @oxc-project/types@https://registry.npmjs.org/@oxc-project/types/-/types-0.139.0.tgz 0ms (cache hit)
+166 http cache @jridgewell/trace-mapping@https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.31.tgz 0ms (cache hit)
+167 http cache @jridgewell/sourcemap-codec@https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz 0ms (cache hit)
+168 http cache @jridgewell/resolve-uri@https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz 0ms (cache hit)
+169 http cache @jridgewell/remapping@https://registry.npmjs.org/@jridgewell/remapping/-/remapping-2.3.5.tgz 0ms (cache hit)
+170 http cache @jridgewell/gen-mapping@https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.13.tgz 0ms (cache hit)
+171 http cache @emnapi/wasi-threads@https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.2.tgz 0ms (cache hit)
+172 http cache @emnapi/runtime@https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.11.1.tgz 0ms (cache hit)
+173 http cache @emnapi/core@https://registry.npmjs.org/@emnapi/core/-/core-1.11.1.tgz 0ms (cache hit)
+174 silly tarball no local data for vite@https://registry.npmjs.org/vite/-/vite-8.1.4.tgz. Extracting by manifest.
+175 silly tarball no local data for typescript@https://registry.npmjs.org/typescript/-/typescript-7.0.2.tgz. Extracting by manifest.
+176 silly tarball no local data for tslib@https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz. Extracting by manifest.
+177 silly tarball no local data for tinyglobby@https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz. Extracting by manifest.
+178 silly tarball no local data for tapable@https://registry.npmjs.org/tapable/-/tapable-2.3.3.tgz. Extracting by manifest.
+179 silly tarball no local data for source-map-js@https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz. Extracting by manifest.
+180 silly tarball no local data for tailwindcss@https://registry.npmjs.org/tailwindcss/-/tailwindcss-4.3.2.tgz. Extracting by manifest.
+181 silly tarball no local data for scheduler@https://registry.npmjs.org/scheduler/-/scheduler-0.27.0.tgz. Extracting by manifest.
+182 silly tarball no local data for rolldown@https://registry.npmjs.org/rolldown/-/rolldown-1.1.5.tgz. Extracting by manifest.
+183 silly tarball no local data for react-dom@https://registry.npmjs.org/react-dom/-/react-dom-19.2.7.tgz. Extracting by manifest.
+184 silly tarball no local data for postcss@https://registry.npmjs.org/postcss/-/postcss-8.5.19.tgz. Extracting by manifest.
+185 silly tarball no local data for react@https://registry.npmjs.org/react/-/react-19.2.7.tgz. Extracting by manifest.
+186 silly tarball no local data for picomatch@https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz. Extracting by manifest.
+187 silly tarball no local data for picocolors@https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz. Extracting by manifest.
+188 silly tarball no local data for nanoid@https://registry.npmjs.org/nanoid/-/nanoid-3.3.16.tgz. Extracting by manifest.
+189 silly tarball no local data for motion-utils@https://registry.npmjs.org/motion-utils/-/motion-utils-12.39.0.tgz. Extracting by manifest.
+190 silly tarball no local data for motion-dom@https://registry.npmjs.org/motion-dom/-/motion-dom-12.42.2.tgz. Extracting by manifest.
+191 silly tarball no local data for magic-string@https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz. Extracting by manifest.
+192 silly tarball no local data for lightningcss-linux-x64-gnu@https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.32.0.tgz. Extracting by manifest.
+193 silly tarball no local data for jiti@https://registry.npmjs.org/jiti/-/jiti-2.7.0.tgz. Extracting by manifest.
+194 silly tarball no local data for lightningcss@https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz. Extracting by manifest.
+195 silly tarball no local data for graceful-fs@https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz. Extracting by manifest.
+196 silly tarball no local data for fdir@https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz. Extracting by manifest.
+197 silly tarball no local data for framer-motion@https://registry.npmjs.org/framer-motion/-/framer-motion-12.42.2.tgz. Extracting by manifest.
+198 silly tarball no local data for detect-libc@https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz. Extracting by manifest.
+199 silly tarball no local data for enhanced-resolve@https://registry.npmjs.org/enhanced-resolve/-/enhanced-resolve-5.21.6.tgz. Extracting by manifest.
+200 silly tarball no local data for csstype@https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz. Extracting by manifest.
+201 silly tarball no local data for @typescript/typescript-linux-x64@https://registry.npmjs.org/@typescript/typescript-linux-x64/-/typescript-linux-x64-7.0.2.tgz. Extracting by manifest.
+202 silly tarball no local data for @vitejs/plugin-react@https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-6.0.3.tgz. Extracting by manifest.
+203 silly tarball no local data for @types/react-dom@https://registry.npmjs.org/@types/react-dom/-/react-dom-19.2.3.tgz. Extracting by manifest.
+204 silly tarball no local data for @types/react@https://registry.npmjs.org/@types/react/-/react-19.2.17.tgz. Extracting by manifest.
+205 silly tarball no local data for @tybys/wasm-util@https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.3.tgz. Extracting by manifest.
+206 silly tarball no local data for @tailwindcss/vite@https://registry.npmjs.org/@tailwindcss/vite/-/vite-4.3.2.tgz. Extracting by manifest.
+207 silly tarball no local data for @tailwindcss/oxide-linux-x64-gnu@https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-gnu/-/oxide-linux-x64-gnu-4.3.2.tgz. Extracting by manifest.
+208 silly tarball no local data for @tailwindcss/oxide@https://registry.npmjs.org/@tailwindcss/oxide/-/oxide-4.3.2.tgz. Extracting by manifest.
+209 silly tarball no local data for @tailwindcss/node@https://registry.npmjs.org/@tailwindcss/node/-/node-4.3.2.tgz. Extracting by manifest.
+210 silly tarball no local data for @rolldown/pluginutils@https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.1.tgz. Extracting by manifest.
+211 silly tarball no local data for @rolldown/binding-linux-x64-gnu@https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.1.5.tgz. Extracting by manifest.
+212 silly tarball no local data for @napi-rs/wasm-runtime@https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.6.tgz. Extracting by manifest.
+213 silly tarball no local data for @oxc-project/types@https://registry.npmjs.org/@oxc-project/types/-/types-0.139.0.tgz. Extracting by manifest.
+214 silly tarball no local data for @jridgewell/trace-mapping@https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.31.tgz. Extracting by manifest.
+215 silly tarball no local data for @jridgewell/sourcemap-codec@https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz. Extracting by manifest.
+216 silly tarball no local data for @jridgewell/resolve-uri@https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz. Extracting by manifest.
+217 silly tarball no local data for @jridgewell/remapping@https://registry.npmjs.org/@jridgewell/remapping/-/remapping-2.3.5.tgz. Extracting by manifest.
+218 silly tarball no local data for @jridgewell/gen-mapping@https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.13.tgz. Extracting by manifest.
+219 silly tarball no local data for @emnapi/wasi-threads@https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.2.tgz. Extracting by manifest.
+220 silly tarball no local data for @emnapi/runtime@https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.11.1.tgz. Extracting by manifest.
+221 silly tarball no local data for @emnapi/core@https://registry.npmjs.org/@emnapi/core/-/core-1.11.1.tgz. Extracting by manifest.
+222 http fetch GET 200 https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz 482ms (cache miss)
+223 http fetch GET 200 https://registry.npmjs.org/@tailwindcss/oxide/-/oxide-4.3.2.tgz 479ms (cache miss)
+224 http fetch GET 200 https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz 490ms (cache miss)
+225 http fetch GET 200 https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz 492ms (cache miss)
+226 http fetch GET 200 https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz 492ms (cache miss)
+227 http fetch GET 200 https://registry.npmjs.org/@tailwindcss/vite/-/vite-4.3.2.tgz 489ms (cache miss)
+228 http fetch GET 200 https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz 490ms (cache miss)
+229 http fetch GET 200 https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz 508ms (cache miss)
+230 http fetch GET 200 https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.1.tgz 496ms (cache miss)
+231 http fetch GET 200 https://registry.npmjs.org/@oxc-project/types/-/types-0.139.0.tgz 499ms (cache miss)
+232 http fetch GET 200 https://registry.npmjs.org/@types/react-dom/-/react-dom-19.2.3.tgz 532ms (cache miss)
+233 http fetch GET 200 https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-6.0.3.tgz 537ms (cache miss)
+234 http fetch GET 200 https://registry.npmjs.org/scheduler/-/scheduler-0.27.0.tgz 577ms (cache miss)
+235 http fetch GET 200 https://registry.npmjs.org/@tailwindcss/node/-/node-4.3.2.tgz 576ms (cache miss)
+236 http fetch GET 200 https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz 600ms (cache miss)
+237 http fetch GET 200 https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz 622ms (cache miss)
+238 http fetch GET 200 https://registry.npmjs.org/nanoid/-/nanoid-3.3.16.tgz 633ms (cache miss)
+239 http fetch GET 200 https://registry.npmjs.org/@types/react/-/react-19.2.17.tgz 628ms (cache miss)
+240 http fetch GET 200 https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.2.tgz 630ms (cache miss)
+241 http fetch GET 200 https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz 684ms (cache miss)
+242 http fetch GET 200 https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz 692ms (cache miss)
+243 http fetch GET 200 https://registry.npmjs.org/tapable/-/tapable-2.3.3.tgz 703ms (cache miss)
+244 http fetch GET 200 https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz 698ms (cache miss)
+245 http fetch GET 200 https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz 695ms (cache miss)
+246 http fetch GET 200 https://registry.npmjs.org/react/-/react-19.2.7.tgz 727ms (cache miss)
+247 http fetch GET 200 https://registry.npmjs.org/@jridgewell/remapping/-/remapping-2.3.5.tgz 717ms (cache miss)
+248 http fetch GET 200 https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.11.1.tgz 712ms (cache miss)
+249 http fetch GET 200 https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.13.tgz 729ms (cache miss)
+250 http fetch GET 200 https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz 776ms (cache miss)
+251 http fetch GET 200 https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.31.tgz 837ms (cache miss)
+252 http fetch GET 200 https://registry.npmjs.org/tailwindcss/-/tailwindcss-4.3.2.tgz 870ms (cache miss)
+253 http fetch GET 200 https://registry.npmjs.org/jiti/-/jiti-2.7.0.tgz 922ms (cache miss)
+254 http fetch GET 200 https://registry.npmjs.org/@emnapi/core/-/core-1.11.1.tgz 920ms (cache miss)
+255 http fetch GET 200 https://registry.npmjs.org/postcss/-/postcss-8.5.19.tgz 940ms (cache miss)
+256 http fetch GET 200 https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-gnu/-/oxide-linux-x64-gnu-4.3.2.tgz 963ms (cache miss)
+257 http fetch GET 200 https://registry.npmjs.org/enhanced-resolve/-/enhanced-resolve-5.21.6.tgz 980ms (cache miss)
+258 http fetch GET 200 https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.3.tgz 1002ms (cache miss)
+259 http fetch GET 200 https://registry.npmjs.org/rolldown/-/rolldown-1.1.5.tgz 1019ms (cache miss)
+260 http fetch GET 200 https://registry.npmjs.org/vite/-/vite-8.1.4.tgz 1028ms (cache miss)
+261 http fetch GET 200 https://registry.npmjs.org/motion-utils/-/motion-utils-12.39.0.tgz 1088ms (cache miss)
+262 http fetch GET 200 https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.6.tgz 1098ms (cache miss)
+263 http fetch GET 200 https://registry.npmjs.org/react-dom/-/react-dom-19.2.7.tgz 1213ms (cache miss)
+264 http fetch GET 200 https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.32.0.tgz 1297ms (cache miss)
+265 http fetch GET 200 https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.1.5.tgz 1541ms (cache miss)
+266 http fetch GET 200 https://registry.npmjs.org/@typescript/typescript-linux-x64/-/typescript-linux-x64-7.0.2.tgz 1796ms (cache miss)
+267 http fetch GET 200 https://registry.npmjs.org/typescript/-/typescript-7.0.2.tgz 1829ms (cache miss)
+268 http fetch GET 200 https://registry.npmjs.org/framer-motion/-/framer-motion-12.42.2.tgz 1888ms (cache miss)
+269 http fetch GET 200 https://registry.npmjs.org/motion-dom/-/motion-dom-12.42.2.tgz 1948ms (cache miss)
+270 silly ADD node_modules/vite
+271 silly ADD node_modules/typescript
+272 silly ADD node_modules/tslib
+273 silly ADD node_modules/tinyglobby
+274 silly ADD node_modules/tapable
+275 silly ADD node_modules/tailwindcss
+276 silly ADD node_modules/source-map-js
+277 silly ADD node_modules/scheduler
+278 silly ADD node_modules/rolldown
+279 silly ADD node_modules/react-dom
+280 silly ADD node_modules/react
+281 silly ADD node_modules/postcss
+282 silly ADD node_modules/picomatch
+283 silly ADD node_modules/picocolors
+284 silly ADD node_modules/nanoid
+285 silly ADD node_modules/motion-utils
+286 silly ADD node_modules/motion-dom
+287 silly ADD node_modules/magic-string
+288 silly ADD
+289 silly ADD
+290 silly ADD
+291 silly ADD node_modules/lightningcss-linux-x64-gnu
+292 silly ADD
+293 silly ADD
+294 silly ADD
+295 silly ADD
+296 silly ADD
+297 silly ADD
+298 silly ADD
+299 silly ADD node_modules/lightningcss
+300 silly ADD node_modules/jiti
+301 silly ADD node_modules/graceful-fs
+302 silly ADD
+303 silly ADD node_modules/framer-motion
+304 silly ADD node_modules/fdir
+305 silly ADD node_modules/enhanced-resolve
+306 silly ADD node_modules/detect-libc
+307 silly ADD node_modules/csstype
+308 silly ADD node_modules/@vitejs/plugin-react
+309 silly ADD
+310 silly ADD
+311 silly ADD
+312 silly ADD
+313 silly ADD
+314 silly ADD
+315 silly ADD
+316 silly ADD node_modules/@typescript/typescript-linux-x64
+317 silly ADD
+318 silly ADD
+319 silly ADD
+320 silly ADD
+321 silly ADD
+322 silly ADD
+323 silly ADD
+324 silly ADD
+325 silly ADD
+326 silly ADD
+327 silly ADD
+328 silly ADD
+329 silly ADD node_modules/@types/react-dom
+330 silly ADD node_modules/@types/react
+331 silly ADD node_modules/@tybys/wasm-util
+332 silly ADD node_modules/@tailwindcss/vite
+333 silly ADD
+334 silly ADD
+335 silly ADD
+336 silly ADD
+337 silly ADD node_modules/@tailwindcss/oxide-linux-x64-gnu
+338 silly ADD
+339 silly ADD
+340 silly ADD
+341 silly ADD
+342 silly ADD
+343 silly ADD
+344 silly ADD
+345 silly ADD node_modules/@tailwindcss/oxide
+346 silly ADD node_modules/@tailwindcss/node
+347 silly ADD node_modules/@rolldown/pluginutils
+348 silly ADD
+349 silly ADD
+350 silly ADD
+351 silly ADD
+352 silly ADD
+353 silly ADD node_modules/@rolldown/binding-linux-x64-gnu
+354 silly ADD
+355 silly ADD
+356 silly ADD
+357 silly ADD
+358 silly ADD
+359 silly ADD
+360 silly ADD
+361 silly ADD
+362 silly ADD
+363 silly ADD node_modules/@oxc-project/types
+364 silly ADD node_modules/@napi-rs/wasm-runtime
+365 silly ADD node_modules/@jridgewell/trace-mapping
+366 silly ADD node_modules/@jridgewell/sourcemap-codec
+367 silly ADD node_modules/@jridgewell/resolve-uri
+368 silly ADD node_modules/@jridgewell/remapping
+369 silly ADD node_modules/@jridgewell/gen-mapping
+370 silly ADD node_modules/@emnapi/wasi-threads
+371 silly ADD node_modules/@emnapi/runtime
+372 silly ADD node_modules/@emnapi/core
+373 verbose cwd /home/dev/meshcat_ERP/.scratch-uno/front
+374 verbose os Linux 5.15.0-202-generic
+375 verbose node v22.23.4
+376 verbose npm  v10.9.9
+377 notice
+377 notice New major version of npm available! 10.9.9 -> 12.2.2
+377 notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+377 notice To update run: npm install -g npm@12.2.2
+377 notice  { force: true, [Symbol(proc-log.meta)]: true }
+378 verbose exit 0
+379 info ok

@@ -28,6 +28,9 @@ class GameState(BaseModel):
     active_color: str = ""
     status: str = "active"
     winner: Optional[str] = None
+    # Set while the current player has drawn and may still play that card.
+    # ``None`` means the player must play from hand or draw.
+    drawn_card_index: Optional[int] = None
 
 # ==========================================
 # Game Service (منطق اصلی بازی)
@@ -120,6 +123,15 @@ class GameService:
         num_players = len(state.players)
         state.current_turn_index = (state.current_turn_index + (state.direction * steps)) % num_players
 
+    def _card_matches(self, state: GameState, card: Card) -> bool:
+        """آیا کارت با رنگ فعال یا کارت روی زمین هم‌خوانی دارد؟"""
+        top_card = state.discard_pile[-1]
+        return (
+            card.color == 'black'
+            or card.color == state.active_color
+            or card.value == top_card.value
+        )
+
     def _holds_active_color(self, player: PlayerState, excluded_index: int, active_color: str) -> bool:
         """آیا بازیکن کارتی هم‌رنگ رنگ فعال دارد؟ (کارت در حال بازی نادیده گرفته می‌شود)"""
         return any(
@@ -143,20 +155,58 @@ class GameService:
         return drawn
 
     async def draw_card(self, game_id: str, player_id: str) -> bool:
-        """بازیکن یک کارت از زمین برمی‌دارد"""
+        """بازیکن یک کارت از زمین برمی‌دارد (اگر کارت قابل بازی باشد نوبتش می‌ماند)"""
         lock_key = get_game_lock_key(game_id)
         async with self.redis.lock(lock_key, timeout=5):
             state = await self.get_game_state(game_id)
             if not state or state.status != "active":
                 return False
-                
+
+            # Only one draw per turn: the player is deciding whether to play it.
+            if state.drawn_card_index is not None:
+                return False
+
             current_player = state.players[state.current_turn_index]
             if current_player.player_id != player_id:
                 return False # نوبت این بازیکن نیست
-                
+
             drawn_cards = self._draw_cards_from_pile(state, 1)
+
+            if not drawn_cards:
+                # Nothing left in either pile: the turn simply passes.
+                self._next_turn(state)
+                await self.save_game_state(state)
+                return True
+
             current_player.hand.extend(drawn_cards)
-            
+            drawn_index = len(current_player.hand) - 1
+
+            if self._card_matches(state, drawn_cards[0]):
+                # Official rule: after drawing a playable card the player may play
+                # it (or pass). The turn is kept until play_card / pass_turn.
+                state.drawn_card_index = drawn_index
+            else:
+                self._next_turn(state)
+
+            await self.save_game_state(state)
+            return True
+
+    async def pass_turn(self, game_id: str, player_id: str) -> bool:
+        """بازیکن پس از برداشتن کارت، از بازی کردن آن صرف‌نظر می‌کند"""
+        lock_key = get_game_lock_key(game_id)
+        async with self.redis.lock(lock_key, timeout=5):
+            state = await self.get_game_state(game_id)
+            if not state or state.status != "active":
+                return False
+
+            current_player = state.players[state.current_turn_index]
+            if current_player.player_id != player_id:
+                return False
+
+            if state.drawn_card_index is None:
+                return False  # نوبت را فقط بعد از برداشتن کارت می‌توان رد کرد
+
+            state.drawn_card_index = None
             self._next_turn(state)
             await self.save_game_state(state)
             return True
@@ -177,18 +227,15 @@ class GameService:
                 return False
                 
             card_to_play = current_player.hand[card_index]
-            top_card = state.discard_pile[-1]
-            
-            # بررسی اینکه آیا کارت مجاز است یا خیر
-            is_valid_play = (
-                card_to_play.color == 'black' or 
-                card_to_play.color == state.active_color or 
-                card_to_play.value == top_card.value
-            )
-            
-            if not is_valid_play:
+
+            # After drawing, only the drawn card may be played.
+            if state.drawn_card_index is not None and card_index != state.drawn_card_index:
                 return False
-                
+
+            # بررسی اینکه آیا کارت مجاز است یا خیر
+            if not self._card_matches(state, card_to_play):
+                return False
+
             if card_to_play.color == 'black' and not chosen_color:
                 return False # برای کارت مشکی باید رنگ انتخاب شود
 
@@ -199,6 +246,7 @@ class GameService:
                 
             # بازی کردن کارت
             current_player.hand.pop(card_index)
+            state.drawn_card_index = None
             state.discard_pile.append(card_to_play)
             state.active_color = chosen_color if card_to_play.color == 'black' else card_to_play.color
 

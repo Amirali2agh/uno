@@ -79,6 +79,18 @@ async def room_websocket(
                 else:
                     await websocket.send_json({"type": "error", "message": "Cannot draw card (not your turn)"})
 
+            elif action == "pass_turn":
+                # Player drew a playable card and declines to play it
+                success = await game_service.pass_turn(game_id, player_id)
+                if success:
+                    new_state = await game_service.get_game_state(game_id)
+                    await room_manager.broadcast(game_id, {
+                        "type": "state_update",
+                        "state": new_state.model_dump()
+                    })
+                else:
+                    await websocket.send_json({"type": "error", "message": "Cannot pass turn"})
+
             elif action == "play_card":
                 # Handle card playing
                 card_index = message.get("card_index")
