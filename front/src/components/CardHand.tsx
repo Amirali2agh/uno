@@ -7,12 +7,15 @@ interface CardHandProps {
   hand: CardType[]; // List of cards in the player's active hand
   onPlayCard: (index: number) => void; // Triggered when a card from hand is selected
   customAssets?: Record<string, string>; // Dynamic skins lookup dictionary
+  /** Whether the card at this hand index is legal right now (turn + colour/value). */
+  isPlayable?: (index: number) => boolean;
 }
 
 export const CardHand: React.FC<CardHandProps> = ({
   hand,
   onPlayCard,
   customAssets = {},
+  isPlayable,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(320);
@@ -114,6 +117,8 @@ export const CardHand: React.FC<CardHandProps> = ({
                   card={card}
                   onClick={() => onPlayCard(originalIndex)}
                   customAssetUrl={customAssetUrl}
+                  playable={isPlayable ? isPlayable(originalIndex) : false}
+                  disabled={isPlayable ? !isPlayable(originalIndex) : false}
                 />
               </motion.div>
             );

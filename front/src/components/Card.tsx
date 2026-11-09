@@ -6,13 +6,38 @@ interface CardProps {
   onClick?: () => void;
   customAssetUrl?: string;
   isHoverable?: boolean;
+  /** Card can be played right now (legal for the active colour/value). */
+  playable?: boolean;
+  /** Interaction is blocked (not your turn, or the drawn card is the only legal one). */
+  disabled?: boolean;
 }
+
+const COLOR_LABELS: Record<string, string> = {
+  red: 'red',
+  blue: 'blue',
+  green: 'green',
+  yellow: 'yellow',
+  black: 'wild',
+};
+
+const VALUE_LABELS: Record<string, string> = {
+  skip: 'skip',
+  reverse: 'reverse',
+  draw2: 'draw two',
+  wild: 'wild',
+  wild4: 'wild draw four',
+};
+
+export const describeCard = (card: CardType): string =>
+  `${COLOR_LABELS[card.color] ?? card.color} ${VALUE_LABELS[card.value] ?? card.value}`;
 
 export const Card: React.FC<CardProps> = ({
   card,
   onClick,
   customAssetUrl,
   isHoverable = true,
+  playable = false,
+  disabled = false,
 }) => {
   // رنگ پس‌زمینه اصلی کارت
   const getBgColor = (color: string) => {
@@ -50,17 +75,21 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const displayVal = getDisplayValue(card.value);
+  const interactive = Boolean(onClick);
 
-  return (
-    <div
-      onClick={onClick}
-      className={`
-        relative w-16 h-24 min-w-[4rem] rounded-xl border-[3px] border-white flex flex-col justify-between p-1 
-        shadow-[0_4px_10px_rgba(0,0,0,0.3)] select-none cursor-pointer transform-gpu transition-all duration-200 origin-bottom
+  const className = `
+        relative w-16 h-24 min-w-[4rem] rounded-xl border-[3px] flex flex-col justify-between p-1 
+        shadow-[0_4px_10px_rgba(0,0,0,0.3)] select-none transform-gpu transition-all duration-200 origin-bottom
         ${getBgColor(card.color)}
-        ${isHoverable ? 'hover:-translate-y-5 hover:scale-110 hover:shadow-[0_10px_20px_rgba(0,0,0,0.5)] hover:z-50' : ''}
-      `}
-    >
+        ${interactive && !disabled ? 'cursor-pointer' : ''}
+        ${disabled ? 'opacity-40 saturate-50 cursor-not-allowed' : ''}
+        ${playable ? 'border-emerald-300 ring-2 ring-emerald-400/70 shadow-[0_0_18px_rgba(16,185,129,0.45)]' : 'border-white'}
+        ${isHoverable && interactive && !disabled ? 'hover:-translate-y-5 hover:scale-110 hover:shadow-[0_10px_20px_rgba(0,0,0,0.5)] hover:z-50' : ''}
+        ${onClick ? 'focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-400 focus-visible:-translate-y-2' : ''}
+      `;
+
+  const content = (
+    <>
       {customAssetUrl ? (
         <img src={customAssetUrl} alt="card" className="w-full h-full object-contain" draggable={false} />
       ) : (
@@ -83,6 +112,24 @@ export const Card: React.FC<CardProps> = ({
           </span>
         </>
       )}
-    </div>
+    </>
+  );
+
+  if (!onClick) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      aria-label={describeCard(card)}
+      aria-disabled={disabled}
+      title={describeCard(card)}
+      className={className}
+    >
+      {content}
+    </button>
   );
 };
