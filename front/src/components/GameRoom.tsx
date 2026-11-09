@@ -69,6 +69,50 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
   // play it or pass.
   const canPass = isMyTurn && gameState?.drawn_card_index != null;
 
+  // A draw is only allowed on your turn and only once per turn.
+  const canDraw = isMyTurn && gameState?.drawn_card_index == null;
+
+  /** Mirrors the server's playability rules so illegal cards are never clickable. */
+  const isCardPlayable = (index: number): boolean => {
+    if (!gameState || !myPlayerState || !isMyTurn) return false;
+
+    const card = myPlayerState.hand[index];
+    if (!card) return false;
+
+    // While the drawn card is pending it is the only card that may be played.
+    if (gameState.drawn_card_index != null) {
+      return index === gameState.drawn_card_index;
+    }
+
+    const topCard = gameState.discard_pile[gameState.discard_pile.length - 1];
+    const matches = card.color === 'black'
+      || card.color === gameState.active_color
+      || (topCard ? card.value === topCard.value : false);
+    if (!matches) return false;
+
+    // Wild Draw Four requires a hand with no card of the active colour.
+    if (card.value === 'wild4') {
+      const holdsActiveColor = myPlayerState.hand.some(
+        (other, otherIndex) => otherIndex !== index && other.color === gameState.active_color,
+      );
+      if (holdsActiveColor) return false;
+    }
+
+    return true;
+  };
+
+  const canPlay = isMyTurn && myPlayerState ? myPlayerState.hand.some((_, index) => isCardPlayable(index)) : false;
+
+  // Escape closes the colour picker: it must never trap the player.
+  useEffect(() => {
+    if (!showColorPicker) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') cancelColorPicker();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showColorPicker]);
+
   const handleUnoButton = () => {
     if (!myPlayerState) return;
     if (myPlayerState.hand.length === 1) {
@@ -84,7 +128,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
   };
 
   const handlePlayCard = (index: number) => {
-    if (!myPlayerState) return;
+    if (!myPlayerState || !isCardPlayable(index)) return;
     const selectedCard = myPlayerState.hand[index];
     if (!selectedCard) return;
 
@@ -95,6 +139,11 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
       sendAction({ action: 'play_card', card_index: index, chosen_color: null, say_uno: unoIntent });
       setUnoIntent(false);
     }
+  };
+
+  const cancelColorPicker = () => {
+    setShowColorPicker(false);
+    setPendingCardIndex(null);
   };
 
   const handleColorSelect = (color: 'red' | 'blue' | 'green' | 'yellow') => {
@@ -229,12 +278,16 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
         <div className="flex items-center justify-center gap-10 overflow-visible">
           
           {/* Draw Deck */}
-          <div 
+          <button
+            type="button"
             onClick={() => sendAction({ action: 'draw_card' })}
+            disabled={!canDraw}
+            aria-label={canDraw ? 'Draw a card' : 'Waiting for your turn'}
             className={`
               relative w-20 h-28 rounded-xl border-[3px] border-white bg-red-600 
-              shadow-[0_8px_15px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center cursor-pointer transform-gpu active:scale-95 transition-all
-              ${isMyTurn ? 'ring-4 ring-orange-500 ring-offset-4 ring-offset-slate-950 animate-pulse' : 'opacity-90'}
+              shadow-[0_8px_15px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center transform-gpu active:scale-95 transition-all
+              ${canDraw ? 'cursor-pointer ring-4 ring-orange-500 ring-offset-4 ring-offset-slate-950 animate-pulse' : 'opacity-60 cursor-not-allowed'}
+              focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-400
             `}
           >
             <div className="absolute -bottom-2 -right-2 w-full h-full rounded-xl border-[3px] border-white bg-red-800 -z-10"></div>
@@ -243,7 +296,7 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
             <div className="w-14 h-20 bg-white rounded-[40%] transform -rotate-12 shadow-inner flex items-center justify-center">
               <span className="text-xl font-black text-red-500 transform rotate-12 tracking-tighter">UNO</span>
             </div>
-          </div>
+          </button>
 
           <DiscardPile discardPile={gameState.discard_pile} activeColor={gameState.active_color} />
         </div>
@@ -301,9 +354,19 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
           )}
         </div>
 
+        {isMyTurn && !canPlay && !canPass && (
+          <p className="mt-1 text-[10px] font-bold tracking-wide text-slate-400">
+            No playable card — draw from the deck.
+          </p>
+        )}
+
         {myPlayerState && (
           <div className="w-full overflow-visible -mt-1">
-            <CardHand hand={myPlayerState.hand} onPlayCard={handlePlayCard} />
+            <CardHand
+              hand={myPlayerState.hand}
+              onPlayCard={handlePlayCard}
+              isPlayable={isCardPlayable}
+            />
           </div>
         )}
       </div>
@@ -327,18 +390,54 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
 
       {/* Color Picker Modal */}
       {showColorPicker && (
-        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-xs w-full text-center shadow-2xl">
-            <h3 className="text-sm font-black tracking-widest text-white mb-6">CHOOSE COLOR</h3>
+        <div
+          className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+          role="presentation"
+          onClick={cancelColorPicker}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="color-picker-title"
+            className="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-xs w-full text-center shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 id="color-picker-title" className="text-sm font-black tracking-widest text-white mb-1">
+              CHOOSE COLOR
+            </h3>
+            <p className="text-[10px] font-semibold text-slate-400 mb-5">
+              Pick the colour that continues the round.
+            </p>
             <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => handleColorSelect('red')} className="h-16 rounded-2xl bg-red-500 border-2 border-white shadow-lg active:scale-95 transition-all"></button>
-              <button onClick={() => handleColorSelect('blue')} className="h-16 rounded-2xl bg-blue-500 border-2 border-white shadow-lg active:scale-95 transition-all"></button>
-              <button onClick={() => handleColorSelect('green')} className="h-16 rounded-2xl bg-green-500 border-2 border-white shadow-lg active:scale-95 transition-all"></button>
-              <button onClick={() => handleColorSelect('yellow')} className="h-16 rounded-2xl bg-yellow-400 border-2 border-white shadow-lg active:scale-95 transition-all"></button>
+              {([
+                { color: 'red', label: 'Red', className: 'bg-red-500' },
+                { color: 'blue', label: 'Blue', className: 'bg-blue-500' },
+                { color: 'green', label: 'Green', className: 'bg-green-500' },
+                { color: 'yellow', label: 'Yellow', className: 'bg-yellow-400' },
+              ] as const).map(({ color, label, className }) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => handleColorSelect(color)}
+                  aria-label={`Choose ${label}`}
+                  autoFocus={color === 'red'}
+                  className={`h-16 rounded-2xl ${className} border-2 border-white shadow-lg active:scale-95 transition-all flex items-end justify-center pb-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-white`}
+                >
+                  <span className="text-[10px] font-black tracking-wider text-slate-900/80">{label}</span>
+                </button>
+              ))}
             </div>
+            <button
+              type="button"
+              onClick={cancelColorPicker}
+              className="mt-5 w-full py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold hover:bg-slate-700 transition-all active:scale-95"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
+
     </div>
   );
 };
