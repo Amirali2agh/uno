@@ -56,3 +56,11 @@ async def test_disconnect_timeout(redis):
     state = await game_service.get_game_state(game_id)
     assert state.status == "finished"
     assert "p1 disconnected" in state.winner
+
+
+def test_global_manager_uses_configured_timeout():
+    """DISCONNECT_TIMEOUT_SECONDS drives the global manager's grace period."""
+    from app.config import settings
+    from app.managers.room_manager import room_manager
+
+    assert room_manager.timeout_seconds == settings.DISCONNECT_TIMEOUT_SECONDS

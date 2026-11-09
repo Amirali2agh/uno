@@ -1,6 +1,7 @@
 import asyncio
 from fastapi import WebSocket
 from redis.asyncio import Redis
+from app.config import settings
 from app.utils.redis_keys import get_player_disconnect_key
 from app.services.game_service import GameService
 
@@ -74,5 +75,6 @@ class RoomManager:
                 except Exception:
                     pass
 
-# Instantiate global manager
-room_manager = RoomManager()
+# Instantiate the global manager from configuration so DISCONNECT_TIMEOUT_SECONDS
+# actually controls the reconnect grace period.
+room_manager = RoomManager(timeout_seconds=settings.DISCONNECT_TIMEOUT_SECONDS)
