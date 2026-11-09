@@ -21,16 +21,14 @@ export const useUnoSocket = () => {
   // --- Cache the latest GameState in a ref to prevent Stale Closures inside WS callbacks ---
   const latestGameStateRef = useRef<GameState | null>(null);
 
-  // --- Dynamic WS URL Resolver to support WSL network bridge mobile testing ---
+  // --- Origin-relative WS URL resolver ---
+  // Sockets always target the origin the page was served from: the Vite dev server
+  // proxies /ws to the backend (see vite.config.ts) and in production the reverse
+  // proxy does the same. Using location.host (not hostname) keeps the dev port.
   const getWsUrl = useCallback((path: string): string => {
-    try {
-      const hostname = window.location.hostname || 'localhost';
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      return `${protocol}//${hostname}${path}`;
-    } catch (err) {
-      console.error('[WS Resolution Error] Failed to resolve hostname:', err);
-      return `ws://localhost${path}`;
-    }
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host || 'localhost:5173';
+    return `${protocol}//${host}${path}`;
   }, []);
 
   // --- PubSub Subscribe mechanism ---

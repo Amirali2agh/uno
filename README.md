@@ -63,6 +63,22 @@ The project includes a comprehensive test suite. To run the tests:
 code
 Bash
 python -m pytest -v
+3. Running the Frontend (development)
+The React client lives in `front/`. Start the Vite dev server in a second terminal:
+
+```bash
+cd front
+npm install
+npm run dev            # http://localhost:5173
+```
+
+The dev server proxies `/ws` and `/admin` to the backend (`http://127.0.0.1:8000`
+by default, override with the `BACKEND_ORIGIN` environment variable), so the
+browser always talks to a single origin and no CORS configuration is needed.
+
+The client identifies the player through query parameters, e.g.
+`http://localhost:5173/?player_id=42&player_name=Ali&player_avatar=/avatars/42.jpg`.
+
 🔌 WebSocket Endpoints
 1. Matchmaking Queue
 ws://<host>:<port>/ws/queue/{player_count}?player_id={your_id}
