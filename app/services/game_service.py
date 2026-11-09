@@ -1,5 +1,6 @@
 import random
-from typing import List, Optional
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, List, Optional
 from pydantic import BaseModel
 from redis.asyncio import Redis
 from app.utils.redis_keys import get_game_state_key, get_game_lock_key
@@ -28,6 +29,7 @@ REASON_MESSAGES = {
     "nothing_to_challenge": "There is no UNO call to challenge.",
     "no_cards_left": "Both piles are empty.",
     "queue_full": "The matchmaking queue is busy.",
+    "game_busy": "The game is busy, please retry.",
 }
 
 
@@ -144,8 +146,42 @@ class GameState(BaseModel):
 # ==========================================
 
 class GameService:
-    def __init__(self, redis: Redis):
+    def __init__(
+        self,
+        redis: Redis,
+        lock_ttl_seconds: float = 10.0,
+        lock_blocking_timeout: float = 3.0,
+    ):
         self.redis = redis
+        self.lock_ttl_seconds = lock_ttl_seconds
+        self.lock_blocking_timeout = lock_blocking_timeout
+
+    @asynccontextmanager
+    async def _game_lock(self, game_id: str) -> AsyncIterator[bool]:
+        """Acquire the per-game distributed lock with a bounded wait.
+
+        Yields False when the lock could not be acquired in time, so callers can
+        answer with a structured error instead of hanging forever.
+        """
+        lock = self.redis.lock(
+            get_game_lock_key(game_id),
+            timeout=self.lock_ttl_seconds,
+            blocking_timeout=self.lock_blocking_timeout,
+        )
+        try:
+            acquired = await lock.acquire(blocking=True)
+        except Exception:  # connection/lock errors must not escape as 500s
+            acquired = False
+
+        try:
+            yield acquired
+        finally:
+            if acquired:
+                try:
+                    await lock.release()
+                except Exception:
+                    # The lock may have expired; the game state is still consistent.
+                    pass
 
     def _generate_uno_deck(self) -> List[Card]:
         """تولید و بُر زدن ۱۰۸ کارت استاندارد اونو"""
@@ -292,8 +328,9 @@ class GameService:
 
     async def draw_card(self, game_id: str, player_id: str) -> ActionResult:
         """بازیکن یک کارت از زمین برمی‌دارد (اگر کارت قابل بازی باشد نوبتش می‌ماند)"""
-        lock_key = get_game_lock_key(game_id)
-        async with self.redis.lock(lock_key, timeout=5):
+        async with self._game_lock(game_id) as acquired:
+            if not acquired:
+                return failure("game_busy")
             state = await self.get_game_state(game_id)
             error = self._check_turn(state, player_id)
             if error is not None:
@@ -328,8 +365,9 @@ class GameService:
 
     async def say_uno(self, game_id: str, player_id: str) -> ActionResult:
         """اعلام «اونو» توسط بازیکنی که یک کارت دارد"""
-        lock_key = get_game_lock_key(game_id)
-        async with self.redis.lock(lock_key, timeout=5):
+        async with self._game_lock(game_id) as acquired:
+            if not acquired:
+                return failure("game_busy")
             state = await self.get_game_state(game_id)
             if not state:
                 return failure("game_not_found")
@@ -351,8 +389,9 @@ class GameService:
 
         در صورت موفقیت، ``player_id`` نتیجه، بازیکنی است که دو کارت جریمه گرفت.
         """
-        lock_key = get_game_lock_key(game_id)
-        async with self.redis.lock(lock_key, timeout=5):
+        async with self._game_lock(game_id) as acquired:
+            if not acquired:
+                return failure("game_busy")
             state = await self.get_game_state(game_id)
             if not state:
                 return failure("game_not_found")
@@ -378,8 +417,9 @@ class GameService:
 
     async def pass_turn(self, game_id: str, player_id: str) -> ActionResult:
         """بازیکن پس از برداشتن کارت، از بازی کردن آن صرف‌نظر می‌کند"""
-        lock_key = get_game_lock_key(game_id)
-        async with self.redis.lock(lock_key, timeout=5):
+        async with self._game_lock(game_id) as acquired:
+            if not acquired:
+                return failure("game_busy")
             state = await self.get_game_state(game_id)
             error = self._check_turn(state, player_id)
             if error is not None:
@@ -403,8 +443,9 @@ class GameService:
         say_uno: bool = False,
     ) -> ActionResult:
         """بازیکن یک کارت را بازی می‌کند"""
-        lock_key = get_game_lock_key(game_id)
-        async with self.redis.lock(lock_key, timeout=5):
+        async with self._game_lock(game_id) as acquired:
+            if not acquired:
+                return failure("game_busy")
             state = await self.get_game_state(game_id)
             error = self._check_turn(state, player_id)
             if error is not None:
