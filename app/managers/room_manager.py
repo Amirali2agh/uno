@@ -3,7 +3,7 @@ from fastapi import WebSocket
 from redis.asyncio import Redis
 from app.config import settings
 from app.utils.redis_keys import get_player_disconnect_key
-from app.services.game_service import GameService
+from app.services.game_service import GameService, GameState
 
 class RoomManager:
     def __init__(self, timeout_seconds: int = 60):
@@ -59,12 +59,30 @@ class RoomManager:
                 state.winner = f"Opponent (Player {player_id} disconnected)"
                 await game_service.save_game_state(state)
                 
-                # Notify remaining players in the room
-                await self.broadcast(game_id, {
-                    "type": "game_over",
-                    "reason": f"Player {player_id} was disconnected for more than {self.timeout_seconds}s.",
-                    "state": state.model_dump()
-                })
+                # Notify remaining players in the room, each with their own view
+                await self.broadcast_state(
+                    game_id,
+                    state,
+                    extra={
+                        "type": "game_over",
+                        "reason": f"Player {player_id} was disconnected for more than {self.timeout_seconds}s.",
+                    },
+                )
+
+    async def broadcast_state(self, game_id: str, state: GameState, extra: dict | None = None):
+        """Send every player their own projection of the game state.
+
+        Hands of other players and the order of the draw pile never leave the
+        server (see GameState.for_player).
+        """
+        for player_id, websocket in list(self.rooms.get(game_id, {}).items()):
+            try:
+                message = {"type": "state_update", "state": state.for_player(player_id).model_dump()}
+                if extra:
+                    message.update(extra)
+                await websocket.send_json(message)
+            except Exception:
+                pass
 
     async def broadcast(self, game_id: str, message: dict):
         """Sends a JSON message to all connected players in the game room."""

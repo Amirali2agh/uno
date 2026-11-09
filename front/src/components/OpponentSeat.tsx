@@ -16,7 +16,8 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
   canChallenge = false,
   onChallenge,
 }) => {
-  const cardCount = player.hand.length;
+  // The server only sends the size for opponents, never their cards.
+  const cardCount = player.hand_size ?? player.hand.length;
   const displayName = player.player_name || player.player_id;
   const avatarInitial = displayName.substring(0, 2).toUpperCase();
   const hasAvatar = !!player.player_avatar;

@@ -12,6 +12,33 @@ class Card(BaseModel):
     color: str
     value: str
 
+class PlayerView(BaseModel):
+    """نمای یک بازیکن از بازیکنان دیگر: بدون دست حریف"""
+
+    player_id: str
+    player_name: str = ""
+    player_avatar: str = ""
+    hand: List[Card] = []
+    hand_size: int = 0
+    uno_declared: bool = False
+
+
+class GameView(BaseModel):
+    """نمای امن وضعیت بازی برای یک بازیکن مشخص"""
+
+    game_id: str
+    players: List[PlayerView]
+    current_turn_index: int
+    direction: int
+    discard_pile: List[Card] = []
+    active_color: str
+    status: str
+    winner: Optional[str] = None
+    drawn_card_index: Optional[int] = None
+    uno_window: Optional[str] = None
+    draw_pile_size: int = 0
+
+
 class PlayerState(BaseModel):
     player_id: str
     player_name: str = ""
@@ -36,6 +63,36 @@ class GameState(BaseModel):
     # Player who went down to one card and can still be challenged for not
     # announcing UNO. Cleared as soon as the next player acts.
     uno_window: Optional[str] = None
+
+    def for_player(self, player_id: str) -> GameView:
+        """Project the state for one viewer: only their own hand, opponents as counts.
+
+        The draw pile is reduced to its size: the order of future draws must never
+        leave the server.
+        """
+        return GameView(
+            game_id=self.game_id,
+            players=[
+                PlayerView(
+                    player_id=p.player_id,
+                    player_name=p.player_name,
+                    player_avatar=p.player_avatar,
+                    hand=list(p.hand) if p.player_id == player_id else [],
+                    hand_size=len(p.hand),
+                    uno_declared=p.uno_declared,
+                )
+                for p in self.players
+            ],
+            current_turn_index=self.current_turn_index,
+            direction=self.direction,
+            discard_pile=list(self.discard_pile),
+            active_color=self.active_color,
+            status=self.status,
+            winner=self.winner,
+            drawn_card_index=self.drawn_card_index,
+            uno_window=self.uno_window,
+            draw_pile_size=len(self.draw_pile),
+        )
 
 # ==========================================
 # Game Service (منطق اصلی بازی)

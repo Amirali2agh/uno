@@ -11,7 +11,8 @@ export interface PlayerState {
   player_id: string; // Unique string identifier for the player
   player_name: string; // Display name of the player
   player_avatar: string; // Avatar URL of the player
-  hand: Card[]; // List of cards in this player's hand (filtered or unfiltered from backend)
+  hand: Card[]; // Own hand; empty for opponents (the server never sends their cards)
+  hand_size: number; // Number of cards held (always present, also for opponents)
   uno_declared: boolean; // True once the player announced UNO while holding one card
 }
 
