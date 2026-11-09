@@ -178,27 +178,35 @@ class GameService:
             current_player.hand.pop(card_index)
             state.discard_pile.append(card_to_play)
             state.active_color = chosen_color if card_to_play.color == 'black' else card_to_play.color
-            
+
+            # Apply the card effect *before* checking for a win: a Draw Two or Wild
+            # Draw Four played as the last card still forces the next player to draw.
+            steps = self._apply_card_effect(state, card_to_play)
+            self._next_turn(state, steps)
+
             # بررسی برنده شدن
             if len(current_player.hand) == 0:
                 state.status = "finished"
                 state.winner = player_id
-                await self.save_game_state(state)
-                return True
-                
-            # اعمال قوانین کارت‌های ویژه (ساده‌سازی شده)
-            steps = 1
-            if card_to_play.value == 'reverse':
-                state.direction *= -1
-                if len(state.players) == 2:
-                    steps = 2 # در بازی دو نفره، ریورس مثل پرش عمل می‌کند
-            elif card_to_play.value in ['skip', 'draw2', 'wild4']:
-                steps = 2
-                next_p_idx = (state.current_turn_index + state.direction) % len(state.players)
-                draw_count = 2 if card_to_play.value == 'draw2' else (4 if card_to_play.value == 'wild4' else 0)
-                if draw_count > 0:
-                    state.players[next_p_idx].hand.extend(self._draw_cards_from_pile(state, draw_count))
-                
-            self._next_turn(state, steps)
+
             await self.save_game_state(state)
             return True
+
+    def _apply_card_effect(self, state: GameState, card: Card) -> int:
+        """اعمال اثر کارت بازی‌شده و برگرداندن تعداد گام تا نوبت بعدی"""
+        steps = 1
+
+        if card.value == 'reverse':
+            state.direction *= -1
+            if len(state.players) == 2:
+                steps = 2  # در بازی دو نفره، ریورس مثل پرش عمل می‌کند
+        elif card.value in ('skip', 'draw2', 'wild4'):
+            steps = 2
+            draw_count = {'draw2': 2, 'wild4': 4}.get(card.value, 0)
+            if draw_count:
+                victim = state.players[
+                    (state.current_turn_index + state.direction) % len(state.players)
+                ]
+                victim.hand.extend(self._draw_cards_from_pile(state, draw_count))
+
+        return steps
