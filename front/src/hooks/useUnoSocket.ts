@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import type { GameState, RoomMessage, GameAction, GameOverPayload } from '../types/uno';
 
 // --- Type definition for our lightweight PubSub event map ---
@@ -10,6 +10,20 @@ type UnoEventMap = {
   game_over: (payload: GameOverPayload) => void;
 };
 
+export type ConnectionStatus = 'idle' | 'connecting' | 'reconnecting' | 'open' | 'closed';
+
+// Reconnection policy for the game room socket.
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_BASE_DELAY_MS = 500;
+const RECONNECT_MAX_DELAY_MS = 8000;
+
+interface RoomConnectionConfig {
+  gameId: string;
+  playerId: string;
+  playerName?: string;
+  playerAvatar?: string;
+}
+
 export const useUnoSocket = () => {
   // --- Refs for managing WebSocket connection lifecycles ---
   const queueWsRef = useRef<WebSocket | null>(null);
@@ -20,6 +34,13 @@ export const useUnoSocket = () => {
 
   // --- Cache the latest GameState in a ref to prevent Stale Closures inside WS callbacks ---
   const latestGameStateRef = useRef<GameState | null>(null);
+
+  // --- Reconnection bookkeeping for the room socket ---
+  const roomConfigRef = useRef<RoomConnectionConfig | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectAttemptRef = useRef(0);
+  const intentionalCloseRef = useRef(false);
+  const [roomStatus, setRoomStatus] = useState<ConnectionStatus>('idle');
 
   // --- Origin-relative WS URL resolver ---
   // Sockets always target the origin the page was served from: the Vite dev server
@@ -100,21 +121,31 @@ export const useUnoSocket = () => {
     };
   }, [getWsUrl, emit]);
 
-  // --- Connect to Room WebSocket (/ws/room) ---
-  const connectRoom = useCallback((gameId: string, playerId: string, playerName?: string, playerAvatar?: string) => {
-    if (roomWsRef.current && roomWsRef.current.readyState === WebSocket.OPEN) return;
+  // --- Clear a pending reconnection timer ---
+  const clearReconnectTimer = useCallback(() => {
+    if (reconnectTimerRef.current !== null) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+  }, []);
 
-    const params = new URLSearchParams({ player_id: playerId });
-    if (playerName) params.append('player_name', playerName);
-    if (playerAvatar) params.append('player_avatar', playerAvatar);
-    const path = `/ws/room/${gameId}?${params.toString()}`;
-    const url = getWsUrl(path);
+  // --- Open (or re-open) the room socket for the current connection config ---
+  const openRoomSocket = useCallback((config: RoomConnectionConfig) => {
+    const params = new URLSearchParams({ player_id: config.playerId });
+    if (config.playerName) params.append('player_name', config.playerName);
+    if (config.playerAvatar) params.append('player_avatar', config.playerAvatar);
+    const url = getWsUrl(`/ws/room/${config.gameId}?${params.toString()}`);
 
-    console.log(`[Room WS] Connecting to game room: ${url}`);
+    setRoomStatus(reconnectAttemptRef.current > 0 ? 'reconnecting' : 'connecting');
+
     const ws = new WebSocket(url);
     roomWsRef.current = ws;
 
-    // Explicitly type MessageEvent to prevent implicit any errors
+    ws.onopen = () => {
+      reconnectAttemptRef.current = 0;
+      setRoomStatus('open');
+    };
+
     ws.onmessage = (event: MessageEvent) => {
       try {
         const payload: RoomMessage = JSON.parse(event.data);
@@ -144,16 +175,51 @@ export const useUnoSocket = () => {
       }
     };
 
-    // Explicitly type WebSocket error as Event
     ws.onerror = (error: Event) => {
       console.error('[Room WS Connection Error]:', error);
-      emit('error', 'Connection to the game room failed.');
     };
 
     ws.onclose = () => {
-      console.log('[Room WS] Connection closed.');
+      // A socket that is no longer the current one was replaced or closed on
+      // purpose (leave, unmount, StrictMode remount): never reconnect for it.
+      if (roomWsRef.current !== ws) return;
+      roomWsRef.current = null;
+
+      if (intentionalCloseRef.current) {
+        setRoomStatus('closed');
+        return;
+      }
+
+      if (reconnectAttemptRef.current >= MAX_RECONNECT_ATTEMPTS) {
+        setRoomStatus('closed');
+        emit('error', 'Lost connection to the game room. Please rejoin from the lobby.');
+        return;
+      }
+
+      const attempt = reconnectAttemptRef.current;
+      reconnectAttemptRef.current = attempt + 1;
+      const delay = Math.min(RECONNECT_MAX_DELAY_MS, RECONNECT_BASE_DELAY_MS * 2 ** attempt);
+      setRoomStatus('reconnecting');
+      clearReconnectTimer();
+      reconnectTimerRef.current = setTimeout(() => openRoomSocket(config), delay);
     };
-  }, [getWsUrl, emit]);
+  }, [clearReconnectTimer, emit, getWsUrl]);
+
+  // --- Connect to Room WebSocket (/ws/room) ---
+  const connectRoom = useCallback((
+    gameId: string,
+    playerId: string,
+    playerName?: string,
+    playerAvatar?: string,
+  ) => {
+    if (roomWsRef.current && roomWsRef.current.readyState === WebSocket.OPEN) return;
+
+    const config: RoomConnectionConfig = { gameId, playerId, playerName, playerAvatar };
+    roomConfigRef.current = config;
+    intentionalCloseRef.current = false;
+    reconnectAttemptRef.current = 0;
+    openRoomSocket(config);
+  }, [openRoomSocket]);
 
   // --- Send Client Action (Draw / Play Card) ---
   const sendAction = useCallback((action: GameAction) => {
@@ -185,15 +251,17 @@ export const useUnoSocket = () => {
 
   // --- Safely disconnect all sockets on unmount ---
   const disconnectAll = useCallback(() => {
-    if (queueWsRef.current) {
-      queueWsRef.current.close();
-      queueWsRef.current = null;
-    }
-    if (roomWsRef.current) {
-      roomWsRef.current.close();
-      roomWsRef.current = null;
-    }
-  }, []);
+    intentionalCloseRef.current = true;
+    clearReconnectTimer();
+    const queueSocket = queueWsRef.current;
+    queueWsRef.current = null;
+    if (queueSocket) queueSocket.close();
+    // Detach before closing so the close handler does not schedule a reconnect.
+    const roomSocket = roomWsRef.current;
+    roomWsRef.current = null;
+    if (roomSocket) roomSocket.close();
+    setRoomStatus('idle');
+  }, [clearReconnectTimer]);
 
   useEffect(() => {
     return () => {
@@ -208,6 +276,7 @@ export const useUnoSocket = () => {
     cancelQueue,
     subscribe,
     disconnectAll,
+    roomStatus,
     getLatestState: () => latestGameStateRef.current
   };
 };

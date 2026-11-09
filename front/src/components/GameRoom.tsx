@@ -14,7 +14,7 @@ interface GameRoomProps {
 }
 
 export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName, playerAvatar, onExit }) => {
-  const { connectRoom, sendAction, subscribe } = useUnoSocket();
+  const { connectRoom, sendAction, subscribe, roomStatus } = useUnoSocket();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [errorLog, setErrorLog] = useState<string | null>(null);
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
@@ -110,7 +110,48 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
     setPendingCardIndex(null);
   };
 
-  if (!gameState) return null;
+  // --- Connecting / failed-connection states (never a blank screen) ---
+  if (!gameState) {
+    const failed = roomStatus === 'closed';
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white p-6 select-none">
+        <div className="bg-slate-900/70 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
+          {failed ? (
+            <>
+              <div className="text-4xl mb-4">🔌</div>
+              <h2 className="text-lg font-black text-white mb-2">Connection lost</h2>
+              <p className="text-sm text-slate-400 mb-6">
+                The game room could not be reached. You can head back to the lobby and start a new match.
+              </p>
+              <button
+                onClick={onExit}
+                className="w-full py-3 rounded-xl bg-orange-600 text-white font-bold text-sm hover:bg-orange-500 transition-all active:scale-95 shadow-lg"
+              >
+                ← Back to Lobby
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="relative w-14 h-14 mx-auto mb-5">
+                <div className="absolute inset-0 rounded-full border-t-4 border-orange-500 animate-spin" />
+                <div className="absolute inset-2 rounded-full border-b-4 border-slate-600 animate-spin" />
+              </div>
+              <h2 className="text-lg font-black text-white mb-1">Joining the table…</h2>
+              <p className="text-xs text-slate-400 mb-6">
+                {roomStatus === 'reconnecting' ? 'Reconnecting to the game room…' : `Room ${gameId.substring(0, 8)}`}
+              </p>
+              <button
+                onClick={onExit}
+                className="w-full py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm border border-slate-700 hover:bg-slate-700 transition-all active:scale-95"
+              >
+                ← Leave
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     // بک‌گراند کاملاً تاریک و شیک
@@ -138,6 +179,31 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
           ROOM: {gameId.substring(0, 8)}
         </span>
       </header>
+
+      {roomStatus === 'closed' && (
+        <div className="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-slate-900 border border-slate-700 p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl">
+            <div className="text-4xl mb-4">🔌</div>
+            <h2 className="text-lg font-black text-white mb-2">Connection lost</h2>
+            <p className="text-sm text-slate-400 mb-6">
+              We could not reconnect to the game room. Your seat stays reserved for a short while, but
+              this table can no longer be updated.
+            </p>
+            <button
+              onClick={onExit}
+              className="w-full py-3 rounded-xl bg-orange-600 text-white font-bold text-sm hover:bg-orange-500 transition-all active:scale-95 shadow-lg"
+            >
+              ← Back to Lobby
+            </button>
+          </div>
+        </div>
+      )}
+
+      {roomStatus === 'reconnecting' && (
+        <div className="absolute top-14 left-4 right-4 z-40 py-2 px-4 bg-amber-500/90 border border-amber-300 backdrop-blur-md rounded-2xl text-center shadow-2xl">
+          <p className="text-xs font-bold text-slate-950">Connection lost — reconnecting…</p>
+        </div>
+      )}
 
       {errorLog && (
         <div className="absolute top-14 left-4 right-4 z-50 py-3 px-4 bg-rose-600/90 border border-rose-400 backdrop-blur-md rounded-2xl text-center shadow-2xl animate-fade-in">
