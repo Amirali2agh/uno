@@ -139,6 +139,8 @@ async def test_reverse_in_four_player_game_flips_direction(game_service):
     )
     state.discard_pile = [Card(color="red", value="5")]
     state.active_color = "red"
+    state.current_turn_index = 0
+    state.direction = 1
     state.players[0].hand = [Card(color="red", value="reverse"), Card(color="blue", value="3")]
     await game_service.save_game_state(state)
 
@@ -209,3 +211,118 @@ async def test_create_game_flips_a_playable_starting_card(game_service):
         )
         assert state.discard_pile[-1].color != "black"
         assert state.active_color == state.discard_pile[-1].color
+
+
+@pytest.mark.asyncio
+async def test_drawing_a_playable_card_keeps_the_turn(game_service):
+    """Official rule: after drawing a playable card the player may play it."""
+    game_id = "draw-play-keeps-turn"
+    state = await prepare_state(
+        game_service,
+        game_id,
+        hand=[Card(color="blue", value="1")],
+        top_card=Card(color="red", value="5"),
+    )
+    # next card off the pile is a red card, which matches the active colour
+    state.draw_pile = [Card(color="red", value="7")]
+    await game_service.save_game_state(state)
+
+    assert await game_service.draw_card(game_id, "p1") is True
+
+    state = await game_service.get_game_state(game_id)
+    assert state.current_turn_index == 0                    # still p1's turn
+    assert state.drawn_card_index == 1                       # the newly drawn card
+    assert await game_service.play_card(game_id, "p1", 1) is True
+
+    state = await game_service.get_game_state(game_id)
+    assert state.drawn_card_index is None
+    assert state.current_turn_index == 1                     # turn passed after playing
+
+
+@pytest.mark.asyncio
+async def test_drawing_an_unplayable_card_passes_the_turn(game_service):
+    game_id = "draw-unplayable"
+    state = await prepare_state(
+        game_service,
+        game_id,
+        hand=[Card(color="blue", value="1")],
+        top_card=Card(color="red", value="5"),
+    )
+    state.draw_pile = [Card(color="green", value="3")]
+    await game_service.save_game_state(state)
+
+    assert await game_service.draw_card(game_id, "p1") is True
+
+    state = await game_service.get_game_state(game_id)
+    assert state.current_turn_index == 1
+    assert state.drawn_card_index is None
+    assert len(state.players[0].hand) == 2
+
+
+@pytest.mark.asyncio
+async def test_cannot_draw_twice_in_one_turn(game_service):
+    game_id = "draw-twice"
+    state = await prepare_state(
+        game_service,
+        game_id,
+        hand=[Card(color="blue", value="1")],
+        top_card=Card(color="red", value="5"),
+    )
+    state.draw_pile = [Card(color="red", value="7")]
+    await game_service.save_game_state(state)
+
+    assert await game_service.draw_card(game_id, "p1") is True
+    assert await game_service.draw_card(game_id, "p1") is False
+
+
+@pytest.mark.asyncio
+async def test_cannot_play_another_card_after_drawing(game_service):
+    game_id = "draw-other-card"
+    state = await prepare_state(
+        game_service,
+        game_id,
+        hand=[Card(color="red", value="2")],
+        top_card=Card(color="red", value="5"),
+    )
+    state.draw_pile = [Card(color="red", value="7")]
+    await game_service.save_game_state(state)
+
+    assert await game_service.draw_card(game_id, "p1") is True
+
+    # index 0 is a different (legal) card; only the drawn one (index 1) may be played
+    assert await game_service.play_card(game_id, "p1", 0) is False
+    assert await game_service.play_card(game_id, "p1", 1) is True
+
+
+@pytest.mark.asyncio
+async def test_pass_turn_after_drawing(game_service):
+    game_id = "draw-pass"
+    state = await prepare_state(
+        game_service,
+        game_id,
+        hand=[Card(color="blue", value="1")],
+        top_card=Card(color="red", value="5"),
+    )
+    state.draw_pile = [Card(color="red", value="7")]
+    await game_service.save_game_state(state)
+
+    assert await game_service.draw_card(game_id, "p1") is True
+    assert await game_service.pass_turn(game_id, "p1") is True
+
+    state = await game_service.get_game_state(game_id)
+    assert state.current_turn_index == 1
+    assert state.drawn_card_index is None
+    assert len(state.players[0].hand) == 2
+
+
+@pytest.mark.asyncio
+async def test_cannot_pass_without_drawing(game_service):
+    game_id = "pass-without-draw"
+    await prepare_state(
+        game_service,
+        game_id,
+        hand=[Card(color="red", value="2")],
+        top_card=Card(color="red", value="5"),
+    )
+
+    assert await game_service.pass_turn(game_id, "p1") is False

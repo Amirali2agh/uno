@@ -24,6 +24,9 @@ export interface GameState {
   active_color: string; // The color currently in play on the discard table
   status: 'active' | 'finished'; // Current execution status of the game room
   winner: string | null; // Winner's player_id, null if game is ongoing
+  // Index (in the current player's hand) of the card just drawn, while they may
+  // still play it or pass. `null` once the turn moves on.
+  drawn_card_index: number | null;
 }
 
 // --- Server-to-Client WebSocket Payloads (Incoming) ---
@@ -69,6 +72,10 @@ export interface DrawCardAction {
   action: 'draw_card'; // Requests drawing one card from the deck
 }
 
+export interface PassTurnAction {
+  action: 'pass_turn'; // Ends the turn after drawing a playable card
+}
+
 export interface PlayCardAction {
   action: 'play_card'; // Requests playing a specific card from the hand
   card_index: number; // The index inside the current hand of the client player
@@ -76,7 +83,7 @@ export interface PlayCardAction {
 }
 
 // Union representing all actions playable by client
-export type GameAction = DrawCardAction | PlayCardAction;
+export type GameAction = DrawCardAction | PlayCardAction | PassTurnAction;
 // --- Dynamic Asset & Theme System Types ---
 
 export interface CardAssetMap {

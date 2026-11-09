@@ -63,6 +63,10 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
     return gameState.players[gameState.current_turn_index]?.player_id === playerId;
   }, [gameState, playerId]);
 
+  // After drawing a playable card the turn is kept: the player decides whether to
+  // play it or pass.
+  const canPass = isMyTurn && gameState?.drawn_card_index != null;
+
   const handlePlayCard = (index: number) => {
     if (!myPlayerState) return;
     const selectedCard = myPlayerState.hand[index];
@@ -177,6 +181,15 @@ export const GameRoom: React.FC<GameRoomProps> = ({ gameId, playerId, playerName
           `}>
             {isMyTurn ? 'YOUR TURN' : 'WAITING...'}
           </div>
+
+          {canPass && (
+            <button
+              onClick={() => sendAction({ action: 'pass_turn' })}
+              className="mt-2 px-4 py-1 rounded-full bg-slate-800 border border-slate-600 text-[10px] font-black tracking-widest text-slate-200 hover:bg-slate-700 active:scale-95 transition-all"
+            >
+              PASS
+            </button>
+          )}
         </div>
 
         {myPlayerState && (
