@@ -97,6 +97,14 @@ class GameService:
         num_players = len(state.players)
         state.current_turn_index = (state.current_turn_index + (state.direction * steps)) % num_players
 
+    def _holds_active_color(self, player: PlayerState, excluded_index: int, active_color: str) -> bool:
+        """آیا بازیکن کارتی هم‌رنگ رنگ فعال دارد؟ (کارت در حال بازی نادیده گرفته می‌شود)"""
+        return any(
+            card.color == active_color
+            for index, card in enumerate(player.hand)
+            if index != excluded_index
+        )
+
     def _draw_cards_from_pile(self, state: GameState, count: int) -> List[Card]:
         """برداشتن کارت از زمین (اگر کارت‌ها تمام شد، کارت‌های سوخته را بُر می‌زند)"""
         drawn = []
@@ -160,6 +168,11 @@ class GameService:
                 
             if card_to_play.color == 'black' and not chosen_color:
                 return False # برای کارت مشکی باید رنگ انتخاب شود
+
+            # Wild Draw Four is only legal when the player holds no card that
+            # matches the active colour (the card being played excluded).
+            if card_to_play.value == 'wild4' and self._holds_active_color(current_player, card_index, state.active_color):
+                return False
                 
             # بازی کردن کارت
             current_player.hand.pop(card_index)
