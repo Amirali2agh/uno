@@ -80,8 +80,31 @@ class GameService:
             discard_pile=discard_pile,
             active_color=discard_pile[-1].color
         )
+
+        # The card that opens the game applies its effect immediately.
+        start_steps = self._apply_starting_card(game_state, discard_pile[-1])
+        if start_steps:
+            self._next_turn(game_state, start_steps)
+
         await self.save_game_state(game_state)
         return game_state
+
+    def _apply_starting_card(self, state: GameState, card: Card) -> int:
+        """اعمال اثر کارت شروع بازی و برگرداندن تعداد گام از صندلی صفر"""
+        if card.value == 'skip':
+            return 1  # صندلی صفر می‌سوزد و بازی از صندلی یک شروع می‌شود
+
+        if card.value == 'reverse':
+            state.direction *= -1
+            if len(state.players) == 2:
+                return 1  # در بازی دو نفره ریورس مثل پرش است
+            return 0  # ترتیب برعکس می‌شود ولی همان بازیکن اول شروع می‌کند
+
+        if card.value == 'draw2':
+            state.players[0].hand.extend(self._draw_cards_from_pile(state, 2))
+            return 1  # دو کارت می‌گیرد و نوبتش می‌سوزد
+
+        return 0
 
     async def get_game_state(self, game_id: str) -> Optional[GameState]:
         """گرفتن وضعیت بازی از ردیس"""
