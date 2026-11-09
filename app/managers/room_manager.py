@@ -1,15 +1,42 @@
 import asyncio
+import logging
+import math
+
 from fastapi import WebSocket
 from redis.asyncio import Redis
 from app.config import settings
 from app.utils.redis_keys import get_player_disconnect_key
 from app.services.game_service import GameService, GameState
 
+logger = logging.getLogger(__name__)
+
 class RoomManager:
     def __init__(self, timeout_seconds: int = 60):
         # Format: {game_id: {player_id: WebSocket}}
         self.rooms: dict[str, dict[str, WebSocket]] = {}
         self.timeout_seconds = timeout_seconds
+        # Timers are kept here: asyncio only holds weak references to tasks, so a
+        # fire-and-forget task can be garbage collected before it fires.
+        self._timeout_tasks: dict[tuple[str, str], asyncio.Task] = {}
+
+    def _cancel_timeout_task(self, game_id: str, player_id: str) -> None:
+        """Stop the pending disconnect timer for a seat (reconnect or re-disconnect)."""
+        task = self._timeout_tasks.pop((game_id, player_id), None)
+        if task is not None and not task.done():
+            task.cancel()
+
+    def _start_timeout_task(self, game_id: str, player_id: str, redis: Redis) -> None:
+        key = (game_id, player_id)
+        self._cancel_timeout_task(game_id, player_id)
+        task = asyncio.create_task(self._start_disconnect_timeout(game_id, player_id, redis))
+        self._timeout_tasks[key] = task
+
+        def _discard(finished: asyncio.Task) -> None:
+            # Only drop the entry if it still points at this task.
+            if self._timeout_tasks.get(key) is finished:
+                self._timeout_tasks.pop(key, None)
+
+        task.add_done_callback(_discard)
 
     async def connect(self, game_id: str, player_id: str, websocket: WebSocket, redis: Redis):
         """Accepts connection and registers the player in their game room."""
@@ -19,7 +46,8 @@ class RoomManager:
             self.rooms[game_id] = {}
         self.rooms[game_id][player_id] = websocket
 
-        # If player reconnected, delete their Redis disconnect key to cancel the timeout
+        # If player reconnected, cancel the pending timer and delete their Redis key
+        self._cancel_timeout_task(game_id, player_id)
         disconnect_key = get_player_disconnect_key(player_id)
         await redis.delete(disconnect_key)
 
@@ -31,25 +59,31 @@ class RoomManager:
             if not self.rooms[game_id]:
                 del self.rooms[game_id]
 
-        # Start a non-blocking background task to wait for reconnection
-        asyncio.create_task(self._start_disconnect_timeout(game_id, player_id, redis))
+        # Start a retained background task to wait for reconnection
+        self._start_timeout_task(game_id, player_id, redis)
 
     async def _start_disconnect_timeout(self, game_id: str, player_id: str, redis: Redis):
         """Sets an expiration key in Redis and checks after timeout if player is still offline."""
         disconnect_key = get_player_disconnect_key(player_id)
         
-        # Use simple and clean integer EXPIRE
-        await redis.set(disconnect_key, "disconnected", ex=int(self.timeout_seconds))
+        # Redis EXPIRE needs whole seconds: sub-second test timeouts round up.
+        await redis.set(disconnect_key, "disconnected", ex=max(1, math.ceil(self.timeout_seconds)))
         
-        # Wait for the specified timeout duration
-        await asyncio.sleep(self.timeout_seconds)
+        # Wait for the specified timeout duration (cancelled on reconnect)
+        try:
+            await asyncio.sleep(self.timeout_seconds)
+        except asyncio.CancelledError:
+            raise
         
         # Check in-memory connections to see if player has reconnected
         is_reconnected = (game_id in self.rooms) and (player_id in self.rooms[game_id])
         
         if not is_reconnected:
             # Cleanup Redis key manually
-            await redis.delete(disconnect_key)
+            try:
+                await redis.delete(disconnect_key)
+            except Exception:  # pragma: no cover - best effort cleanup
+                logger.warning("Could not delete disconnect key for %s", player_id)
             
             # Game over: Player failed to reconnect in time
             game_service = GameService(redis)
