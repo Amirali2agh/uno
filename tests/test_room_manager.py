@@ -55,7 +55,10 @@ async def test_disconnect_timeout(redis):
 
     state = await game_service.get_game_state(game_id)
     assert state.status == "finished"
-    assert "p1 disconnected" in state.winner
+    # winner is always a player id, never a sentence
+    assert state.winner == "p2"
+    assert state.end_reason == "disconnect_timeout"
+    assert state.disconnected_player_id == "p1"
 
 
 def test_global_manager_uses_configured_timeout():
@@ -64,3 +67,25 @@ def test_global_manager_uses_configured_timeout():
     from app.managers.room_manager import room_manager
 
     assert room_manager.timeout_seconds == settings.DISCONNECT_TIMEOUT_SECONDS
+
+
+@pytest.mark.asyncio
+async def test_disconnect_in_a_four_player_game_has_no_single_winner(redis, game_service):
+    """With more seats left the match is abandoned instead of awarding a winner."""
+    game_id = "timeout-4p"
+    await game_service.create_game(
+        game_id, [{"player_id": p} for p in ("p1", "p2", "p3", "p4")]
+    )
+
+    manager = RoomManager(timeout_seconds=0.3)
+    for player_id in ("p1", "p2", "p3", "p4"):
+        await manager.connect(game_id, player_id, MockWebSocket(), redis)
+
+    await manager.disconnect(game_id, "p1", redis)
+    await asyncio.sleep(0.6)
+
+    state = await game_service.get_game_state(game_id)
+    assert state.status == "finished"
+    assert state.winner is None
+    assert state.end_reason == "disconnect_timeout"
+    assert state.disconnected_player_id == "p1"
