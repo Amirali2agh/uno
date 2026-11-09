@@ -87,6 +87,8 @@ class GameView(BaseModel):
     active_color: str
     status: str
     winner: Optional[str] = None
+    end_reason: Optional[str] = None
+    disconnected_player_id: Optional[str] = None
     drawn_card_index: Optional[int] = None
     uno_window: Optional[str] = None
     draw_pile_size: int = 0
@@ -109,7 +111,12 @@ class GameState(BaseModel):
     discard_pile: List[Card] = []
     active_color: str = ""
     status: str = "active"
+    # Always a player id (never a sentence): the client resolves it to a name.
     winner: Optional[str] = None
+    # Why the game ended: "player_out" when someone played their last card,
+    # "disconnect_timeout" when a player failed to reconnect.
+    end_reason: Optional[str] = None
+    disconnected_player_id: Optional[str] = None
     # Set while the current player has drawn and may still play that card.
     # ``None`` means the player must play from hand or draw.
     drawn_card_index: Optional[int] = None
@@ -142,6 +149,8 @@ class GameState(BaseModel):
             active_color=self.active_color,
             status=self.status,
             winner=self.winner,
+            end_reason=self.end_reason,
+            disconnected_player_id=self.disconnected_player_id,
             drawn_card_index=self.drawn_card_index,
             uno_window=self.uno_window,
             draw_pile_size=len(self.draw_pile),
@@ -524,6 +533,7 @@ class GameService:
             if len(current_player.hand) == 0:
                 state.status = "finished"
                 state.winner = player_id
+                state.end_reason = "player_out"
 
             await self.save_game_state(state)
             return success(winner=player_id) if state.status == "finished" else success()

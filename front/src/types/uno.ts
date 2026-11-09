@@ -25,7 +25,9 @@ export interface GameState {
   discard_pile: Card[]; // Cards played so far on the board
   active_color: string; // The color currently in play on the discard table
   status: 'active' | 'finished'; // Current execution status of the game room
-  winner: string | null; // Winner's player_id, null if game is ongoing
+  winner: string | null; // Winner's player_id, null if the game is ongoing or abandoned
+  end_reason: 'player_out' | 'disconnect_timeout' | null; // Why the game ended
+  disconnected_player_id: string | null; // Seat that failed to reconnect
   // Index (in the current player's hand) of the card just drawn, while they may
   // still play it or pass. `null` once the turn moves on.
   drawn_card_index: number | null;

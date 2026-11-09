@@ -89,8 +89,13 @@ class RoomManager:
             game_service = GameService(redis)
             state = await game_service.get_game_state(game_id)
             if state and state.status == "active":
+                remaining = [p.player_id for p in state.players if p.player_id != player_id]
                 state.status = "finished"
-                state.winner = f"Opponent (Player {player_id} disconnected)"
+                state.end_reason = "disconnect_timeout"
+                state.disconnected_player_id = player_id
+                # A two-player game is won by the player who stayed; with more
+                # seats the match is abandoned and has no single winner.
+                state.winner = remaining[0] if len(remaining) == 1 else None
                 await game_service.save_game_state(state)
                 
                 # Notify remaining players in the room, each with their own view
