@@ -6,7 +6,8 @@ A highly scalable, real-time multiplayer UNO game server built with **FastAPI**,
 
 - **Real-Time Gameplay:** Low-latency bidirectional communication using WebSockets.
 - **Smart Matchmaking:** Automated queue system for 2-player and 4-player game modes.
-- **Robust Game Logic:** Full UNO rules implementation (Skip, Reverse, Draw 2, Wild, Wild 4) validated on the server side.
+- **UNO Rules:** Skip, Reverse, Draw 2, Wild, Wild 4 (with the "no matching colour" restriction),
+  draw-then-play turns, the starting-card effect, and the UNO call/challenge penalty — all validated on the server side.
 - **Concurrency Control:** Utilizes Redis Distributed Locks (Redlock) to prevent race conditions during simultaneous card plays.
 - **Fault Tolerance:** 60-second automated disconnect timeout. If a player drops, the game waits; if they don't return, the opponent wins.
 - **Dockerized:** Ready for production deployment.
@@ -97,6 +98,9 @@ Actions (Client -> Server):
 Draw a card: {"action": "draw_card"}
 Play a card: {"action": "play_card", "card_index": 1, "chosen_color": "red"}
 Pass the turn after drawing: {"action": "pass_turn"}
+Announce UNO: {"action": "say_uno"}
+Challenge a missed UNO: {"action": "challenge_uno"}
+Play and announce UNO together: {"action": "play_card", "card_index": 0, "say_uno": true}
 🐳 Docker Deployment
 Build the Docker image:
 code

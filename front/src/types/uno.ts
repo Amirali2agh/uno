@@ -12,6 +12,7 @@ export interface PlayerState {
   player_name: string; // Display name of the player
   player_avatar: string; // Avatar URL of the player
   hand: Card[]; // List of cards in this player's hand (filtered or unfiltered from backend)
+  uno_declared: boolean; // True once the player announced UNO while holding one card
 }
 
 export interface GameState {
@@ -27,6 +28,8 @@ export interface GameState {
   // Index (in the current player's hand) of the card just drawn, while they may
   // still play it or pass. `null` once the turn moves on.
   drawn_card_index: number | null;
+  // Player who went down to one card without announcing UNO and can be challenged.
+  uno_window: string | null;
 }
 
 // --- Server-to-Client WebSocket Payloads (Incoming) ---
@@ -76,14 +79,28 @@ export interface PassTurnAction {
   action: 'pass_turn'; // Ends the turn after drawing a playable card
 }
 
+export interface SayUnoAction {
+  action: 'say_uno'; // Announce UNO while holding a single card
+}
+
+export interface ChallengeUnoAction {
+  action: 'challenge_uno'; // Challenge a player who did not announce UNO
+}
+
 export interface PlayCardAction {
   action: 'play_card'; // Requests playing a specific card from the hand
   card_index: number; // The index inside the current hand of the client player
   chosen_color: 'red' | 'blue' | 'green' | 'yellow' | null; // Color picked for 'black' wildcards
+  say_uno?: boolean; // Announce UNO in the same message that leaves one card
 }
 
 // Union representing all actions playable by client
-export type GameAction = DrawCardAction | PlayCardAction | PassTurnAction;
+export type GameAction =
+  | DrawCardAction
+  | PlayCardAction
+  | PassTurnAction
+  | SayUnoAction
+  | ChallengeUnoAction;
 // --- Dynamic Asset & Theme System Types ---
 
 export interface CardAssetMap {

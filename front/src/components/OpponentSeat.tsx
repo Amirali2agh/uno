@@ -5,12 +5,16 @@ interface OpponentSeatProps {
   player: PlayerState; // Opponent player state received from backend
   isCurrentTurn: boolean; // Is it currently this opponent's turn?
   customCardBack?: string; // Optional custom asset URL for the back of cards
+  canChallenge?: boolean; // This opponent can be challenged for a missed UNO
+  onChallenge?: () => void;
 }
 
 export const OpponentSeat: React.FC<OpponentSeatProps> = ({
   player,
   isCurrentTurn,
   customCardBack,
+  canChallenge = false,
+  onChallenge,
 }) => {
   const cardCount = player.hand.length;
   const displayName = player.player_name || player.player_id;
@@ -58,6 +62,16 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
           </span>
         </div>
       </div>
+
+      {canChallenge && (
+        <button
+          onClick={onChallenge}
+          aria-label={`Challenge ${displayName} for not announcing UNO`}
+          className="px-2 py-0.5 rounded-full bg-rose-600 border border-rose-400 text-[9px] font-black tracking-wider text-white shadow-lg hover:bg-rose-500 active:scale-95 transition-all"
+        >
+          UNO?
+        </button>
+      )}
 
       {/* Opponent overlapping miniature card backs fan layout pointing downwards */}
       {cardCount > 0 && (
